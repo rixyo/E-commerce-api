@@ -4,4 +4,53 @@ generator client {
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+model Store {
+ id String @id @default(cuid())
+  name String
+  userId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+}
+model User {
+  id String @id @default(cuid())
+  email String @unique
+  googleId String? @unique
+  displayName  String
+  passwordHash String?
+  avatarUrl String?
+  authType AuthType
+  userRole UserRole
+  address Address[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model Address {
+  id String @id @default(cuid())
+  addressType AddressType
+  street String
+  city String
+  state String
+  zip String
+  userId String
+ user User @relation(fields: [userId],references: [id],onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+enum AddressType {
+  HOME
+  WORK
+  OTHER
+}
+enum AuthType {
+  GOOGLE
+  EMAIL
+}
+enum UserRole {
+  ADMIN
+  USER
 }
