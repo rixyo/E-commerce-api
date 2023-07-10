@@ -8,18 +8,23 @@ import { StoreModule } from './store/store.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
 import { PassportModule } from '@nestjs/passport';
-import { GoogleStrategy } from './user/auth/google.strategy';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { UserInterceptor } from './user/intercepters/user.inteceptor';
-import { AuthGuard } from './guard/auth.guard';
+import { AuthGuard } from './guards/auth.guard';
+import { ConfigModule } from '@nestjs/config';
 @Module({
-  imports: [StoreModule, PrismaModule, UserModule, PassportModule],
+  imports: [
+    StoreModule,
+    PrismaModule,
+    UserModule,
+    PassportModule,
+    ConfigModule.forRoot(),
+  ],
   controllers: [AppController, StoreController],
   providers: [
     AppService,
     PrismaService,
     StoreService,
-    GoogleStrategy,
 
     {
       provide: APP_INTERCEPTOR,

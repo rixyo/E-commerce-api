@@ -15,7 +15,7 @@ async function main() {
   );
   app.use(cookieParser());
   app.enableCors({
-    origin: process.env.DEV_CLIENT_URL,
+    origin: 'http://localhost:3000',
     credentials: true,
   });
   await app.listen(5000);

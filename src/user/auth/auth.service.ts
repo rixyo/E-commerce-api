@@ -16,7 +16,7 @@ export class AuthService {
     try {
       let user = await this.prisma.user.findUnique({
         where: {
-          googleId: id,
+          email: email,
         },
       });
       if (!user) {
@@ -30,6 +30,13 @@ export class AuthService {
             authType: 'GOOGLE',
           },
         });
+        const token = await this.generateJwtToken(
+          user.id,
+          user.displayName,
+          user.userRole,
+        );
+        return token;
+      } else if (user) {
         const token = await this.generateJwtToken(
           user.id,
           user.displayName,
@@ -99,7 +106,7 @@ export class AuthService {
     );
     return token;
   }
-  private async generateJwtToken(
+  async generateJwtToken(
     userId: string,
     displayName: string,
     userRole: UserRole,
