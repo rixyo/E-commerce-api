@@ -8,7 +8,7 @@ datasource db {
 
 }
 model Store {
- id String @id @default(cuid())
+ id String @id @default(uuid())
   name String
   userId String
   createdAt DateTime @default(now())
@@ -16,20 +16,20 @@ model Store {
 
 }
 model User {
-  id String @id @default(cuid())
+  id String @id @default(uuid())
   email String @unique
   googleId String? @unique
   displayName  String
   passwordHash String?
   avatarUrl String?
   authType AuthType
-  userRole UserRole
+  userRole UserRole @default(USER)
   address Address[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 model Address {
-  id String @id @default(cuid())
+  id String @id @default(uuid())
   addressType AddressType
   street String
   city String

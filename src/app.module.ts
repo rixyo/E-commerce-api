@@ -11,15 +11,10 @@ import { PassportModule } from '@nestjs/passport';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { UserInterceptor } from './user/intercepters/user.inteceptor';
 import { AuthGuard } from './guards/auth.guard';
-import { ConfigModule } from '@nestjs/config';
+import { RedisModule } from './redis/redis.module';
+
 @Module({
-  imports: [
-    StoreModule,
-    PrismaModule,
-    UserModule,
-    PassportModule,
-    ConfigModule.forRoot(),
-  ],
+  imports: [StoreModule, PrismaModule, UserModule, PassportModule, RedisModule],
   controllers: [AppController, StoreController],
   providers: [
     AppService,

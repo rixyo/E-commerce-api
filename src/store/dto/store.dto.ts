@@ -4,7 +4,4 @@ export class CreateStoreDto {
   @IsString()
   @IsNotEmpty()
   name: string;
-  @IsString()
-  @IsNotEmpty()
-  userId: string;
 }
