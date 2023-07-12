@@ -13,15 +13,22 @@ export class StoreService {
     private readonly redis: RedisService,
   ) {}
   async createStore(data: CreateStore, userId: string) {
-    return await this.Prisma.store.create({
+    const store = await this.Prisma.store.create({
       data: {
         name: data.name,
         userId: userId,
       },
       select: {
         id: true,
+        name: true,
+        userId: true,
       },
     });
+
+    await this.redis.setValue(`getAllStore+${userId}`, 'null');
+    await this.redis.setValue(`findByUserId+${userId}`, JSON.stringify(store));
+    await this.redis.setValue(store.id, JSON.stringify(store));
+    return store;
   }
   async getStoreById(id: string) {
     const storeFromCache = await this.redis.getValue(id);
@@ -52,6 +59,7 @@ export class StoreService {
         select: {
           id: true,
           userId: true,
+          name: true,
         },
       });
       if (!store) throw new NotFoundException('Store not found');
@@ -62,5 +70,54 @@ export class StoreService {
       return store;
     }
     return JSON.parse(storeFromCache);
+  }
+  async getAllStore(userId: string) {
+    const storeFromCache = await this.redis.getValue(`getAllStore+${userId}`);
+    if (storeFromCache === 'null' || !storeFromCache) {
+      const store = await this.Prisma.store.findMany({
+        where: {
+          userId: userId,
+        },
+        select: {
+          id: true,
+          name: true,
+          userId: true,
+        },
+      });
+      if (!store) throw new NotFoundException('Store not found');
+      await this.redis.setValue(`getAllStore+${userId}`, JSON.stringify(store));
+      return store;
+    }
+    return JSON.parse(storeFromCache);
+  }
+  async updateStore(id: string, data: CreateStore) {
+    const store = await this.Prisma.store.update({
+      where: {
+        id: id,
+      },
+      data: {
+        name: data.name,
+      },
+      select: {
+        id: true,
+        name: true,
+        userId: true,
+      },
+    });
+    await this.redis.setValue(id, JSON.stringify(store));
+    await this.redis.setValue(`findByUserId+${store.userId}`, 'null');
+    await this.redis.setValue(`getAllStore+${store.userId}`, 'null');
+    return store;
+  }
+  async deleteStore(id: string, userId: string) {
+    await this.Prisma.store.delete({
+      where: {
+        id: id,
+      },
+    });
+    await this.redis.setValue(id, 'null');
+    await this.redis.setValue(`findByUserId+${userId}`, 'null');
+    await this.redis.setValue(`getAllStore+${userId}`, 'null');
+    return 'Deleted successfully';
   }
 }
