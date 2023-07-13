@@ -12,10 +12,13 @@ import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { UserInterceptor } from './user/intercepters/user.inteceptor';
 import { AuthGuard } from './guards/auth.guard';
 import { RedisModule } from './redis/redis.module';
+import { BillboardController } from './billboard/billboard.controller';
+import { BillboardService } from './billboard/billboard.service';
+import { BillboardModule } from './billboard/billboard.module';
 
 @Module({
-  imports: [StoreModule, PrismaModule, UserModule, PassportModule, RedisModule],
-  controllers: [AppController, StoreController],
+  imports: [StoreModule, PrismaModule, UserModule, PassportModule, RedisModule, BillboardModule],
+  controllers: [AppController, StoreController, BillboardController],
   providers: [
     AppService,
     PrismaService,
@@ -29,6 +32,7 @@ import { RedisModule } from './redis/redis.module';
       provide: APP_GUARD,
       useClass: AuthGuard,
     },
+    BillboardService,
   ],
 })
 export class AppModule {}

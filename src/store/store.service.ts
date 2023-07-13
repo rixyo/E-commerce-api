@@ -115,9 +115,9 @@ export class StoreService {
         id: id,
       },
     });
-    await this.redis.setValue(id, 'null');
-    await this.redis.setValue(`findByUserId+${userId}`, 'null');
-    await this.redis.setValue(`getAllStore+${userId}`, 'null');
+    await this.redis.deleteValue(id);
+    await this.redis.deleteValue(`findByUserId+${userId}`);
+    await this.redis.deleteValue(`getAllStore+${userId}`);
     return 'Deleted successfully';
   }
 }
