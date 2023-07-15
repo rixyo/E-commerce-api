@@ -12,6 +12,7 @@ model Store {
   name String
   userId String
   billboards Billboard[] @relation("BillBoardToStore")
+  categories Category[] @relation("StoreToCategory")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -47,11 +48,24 @@ model Billboard {
   id String @id @default(uuid())
   storeId String
   store Store @relation("BillBoardToStore",fields: [storeId],references: [id],onDelete: Cascade)
+  Categories Category[] @relation()
   label String
   imageUrl String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([storeId])
+}
+model Category {
+  id String @id @default(uuid())
+  storeId String
+  store Store @relation("StoreToCategory",fields: [storeId],references: [id],onDelete: Cascade)
+  billboardId String
+  billboard Billboard @relation(fields: [billboardId],references: [id],onDelete: Cascade)
+  name String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([storeId])
+  @@index([billboardId])
 }
 enum AddressType {
   HOME
