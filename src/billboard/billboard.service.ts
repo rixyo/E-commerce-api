@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RedisService } from 'src/redis/redis.service';
 
@@ -42,6 +42,7 @@ export class BillboardService {
           imageUrl: true,
         },
       });
+      if (!billboard) throw new NotFoundException('Billboard not found');
       await this.redisService.setValue(id, JSON.stringify(billboard));
       return billboard;
     }
@@ -99,6 +100,9 @@ export class BillboardService {
           createdAt: 'desc',
         },
       });
+      if (!billboards || billboards.length === 0) {
+        throw new NotFoundException('Billboards not found');
+      }
       await this.redisService.setValue(
         `getAllBillboard+${storeId}`,
         JSON.stringify(billboards),

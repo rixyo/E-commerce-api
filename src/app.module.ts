@@ -15,9 +15,10 @@ import { RedisModule } from './redis/redis.module';
 import { BillboardController } from './billboard/billboard.controller';
 import { BillboardService } from './billboard/billboard.service';
 import { BillboardModule } from './billboard/billboard.module';
+import { CategoryModule } from './category/category.module';
 
 @Module({
-  imports: [StoreModule, PrismaModule, UserModule, PassportModule, RedisModule, BillboardModule],
+  imports: [StoreModule, PrismaModule, UserModule, PassportModule, RedisModule, BillboardModule, CategoryModule],
   controllers: [AppController, StoreController, BillboardController],
   providers: [
     AppService,

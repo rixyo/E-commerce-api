@@ -19,22 +19,22 @@ export class StoreController {
   @Roles('ADMIN')
   @Post()
   async createStore(@Body() body: CreateStoreDto, @User() user: userType) {
-    return this.storeService.createStore(body, user.userId);
+    return await this.storeService.createStore(body, user.userId);
   }
   @Roles('ADMIN')
   @Get('all')
   async getAllStore(@User() user: userType) {
-    return this.storeService.getAllStore(user.userId);
+    return await this.storeService.getAllStore(user.userId);
   }
   @Roles('ADMIN')
   @Get(':id')
   async getStoreById(@Param('id', ParseUUIDPipe) id: string) {
-    return this.storeService.getStoreById(id);
+    return await this.storeService.getStoreById(id);
   }
   @Roles('ADMIN')
   @Get()
   async getStoreByUserId(@User() user: userType) {
-    return this.storeService.getStoreByUserId(user.userId);
+    return await this.storeService.getStoreByUserId(user.userId);
   }
   @Roles('ADMIN')
   @Patch(':id')
@@ -42,7 +42,7 @@ export class StoreController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: CreateStoreDto,
   ) {
-    return this.storeService.updateStore(id, body);
+    return await this.storeService.updateStore(id, body);
   }
   @Roles('ADMIN')
   @Delete(':id')
@@ -50,6 +50,6 @@ export class StoreController {
     @Param('id', ParseUUIDPipe) id: string,
     @User() user: userType,
   ) {
-    return this.storeService.deleteStore(id, user.userId);
+    return await this.storeService.deleteStore(id, user.userId);
   }
 }

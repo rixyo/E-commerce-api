@@ -21,12 +21,16 @@ export class BillboardController {
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() data: createBillboardDto,
   ) {
-    return this.billboardService.createBillboard(data.label, data.imageUrl, id);
+    return await this.billboardService.createBillboard(
+      data.label,
+      data.imageUrl,
+      id,
+    );
   }
   @Roles('ADMIN')
   @Get(':id')
   async getBillboardById(@Param('id', new ParseUUIDPipe()) id: string) {
-    return this.billboardService.getBillboardById(id);
+    return await this.billboardService.getBillboardById(id);
   }
   @Roles('ADMIN')
   @Patch(':storeId/update/:id')
@@ -35,7 +39,7 @@ export class BillboardController {
     @Param('storeId', new ParseUUIDPipe()) storeId: string,
     @Body() data: createBillboardDto,
   ) {
-    return this.billboardService.updateBillboardById(
+    return await this.billboardService.updateBillboardById(
       id,
       data.label,
       data.imageUrl,
@@ -46,11 +50,11 @@ export class BillboardController {
   async findAllBillboards(
     @Param('storeId', new ParseUUIDPipe()) storeId: string,
   ) {
-    return this.billboardService.getAllBillboard(storeId);
+    return await this.billboardService.getAllBillboard(storeId);
   }
   @Roles('ADMIN')
   @Delete(':id')
   async deleteBillboardById(@Param('id', new ParseUUIDPipe()) id: string) {
-    return this.billboardService.deleteBillboardById(id);
+    return await this.billboardService.deleteBillboardById(id);
   }
 }
