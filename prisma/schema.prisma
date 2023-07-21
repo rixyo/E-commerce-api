@@ -13,6 +13,7 @@ model Store {
   userId String
   billboards Billboard[] @relation("BillBoardToStore")
   categories Category[] @relation("StoreToCategory")
+  sizes Size[] @relation("StoreToSize")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -66,6 +67,24 @@ model Category {
   updatedAt DateTime @updatedAt
   @@index([storeId])
   @@index([billboardId])
+}
+model Size {
+  id String @id @default(uuid())
+  storeId String
+  store Store @relation("StoreToSize",fields: [storeId],references: [id],onDelete: Cascade)
+  name String
+  value SizeType
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([storeId])
+}
+enum SizeType {
+  SMALL
+  MEDIUM
+  LARGE
+  XLARGE
+  XXLARGE
+  XXXLARGE
 }
 enum AddressType {
   HOME

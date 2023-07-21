@@ -16,9 +16,10 @@ import { BillboardController } from './billboard/billboard.controller';
 import { BillboardService } from './billboard/billboard.service';
 import { BillboardModule } from './billboard/billboard.module';
 import { CategoryModule } from './category/category.module';
+import { SizeModule } from './size/size.module';
 
 @Module({
-  imports: [StoreModule, PrismaModule, UserModule, PassportModule, RedisModule, BillboardModule, CategoryModule],
+  imports: [StoreModule, PrismaModule, UserModule, PassportModule, RedisModule, BillboardModule, CategoryModule, SizeModule],
   controllers: [AppController, StoreController, BillboardController],
   providers: [
     AppService,
