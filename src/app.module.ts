@@ -17,9 +17,11 @@ import { BillboardService } from './billboard/billboard.service';
 import { BillboardModule } from './billboard/billboard.module';
 import { CategoryModule } from './category/category.module';
 import { SizeModule } from './size/size.module';
+import { ColorModule } from './color/color.module';
+import { ProductModule } from './product/product.module';
 
 @Module({
-  imports: [StoreModule, PrismaModule, UserModule, PassportModule, RedisModule, BillboardModule, CategoryModule, SizeModule],
+  imports: [StoreModule, PrismaModule, UserModule, PassportModule, RedisModule, BillboardModule, CategoryModule, SizeModule, ColorModule, ProductModule],
   controllers: [AppController, StoreController, BillboardController],
   providers: [
     AppService,

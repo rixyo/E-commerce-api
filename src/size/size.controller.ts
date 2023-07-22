@@ -1,13 +1,48 @@
-import { Controller, Get, Param, ParseUUIDPipe } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { SizeService } from './size.service';
 import { Roles } from 'src/decoratores/role.decorator';
+import { createSizeDto } from './dto/size.dto';
 
 @Controller('size')
 export class SizeController {
   constructor(private readonly sizeService: SizeService) {}
+  @Get(':storeId/findall')
+  async getAllSizes(@Param('storeId', ParseUUIDPipe) storeId: string) {
+    return await this.sizeService.getAllSizes(storeId);
+  }
+  @Get(':id')
+  async getSizeById(@Param('id', ParseUUIDPipe) id: string) {
+    return await this.sizeService.getSizeById(id);
+  }
   @Roles('ADMIN')
-  @Get('findall')
-  async getAllSizes(@Param('id', ParseUUIDPipe) id: string) {
-    return await this.sizeService.getAllSizes(id);
+  @Post(':storeId/create')
+  async createSize(
+    @Param('storeId') storeId: string,
+    @Body() data: createSizeDto,
+  ) {
+    return await this.sizeService.createSize(data.name, storeId, data.value);
+  }
+  @Roles('ADMIN')
+  @Patch(':storeId/update/:id')
+  async updateSizeById(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('storeId', ParseUUIDPipe) storeId: string,
+    @Body() data: createSizeDto,
+  ) {
+    return await this.sizeService.updateSize(id, data.name, data.value);
+  }
+  @Roles('ADMIN')
+  @Delete(':id')
+  async deleteSizeById(@Param('id', ParseUUIDPipe) id: string) {
+    return await this.sizeService.deleteSize(id);
   }
 }

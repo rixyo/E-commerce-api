@@ -20,6 +20,7 @@ export class SizeService {
         select: {
           id: true,
           name: true,
+          value: true,
           storeId: true,
           createdAt: true,
         },
@@ -34,5 +35,60 @@ export class SizeService {
       return sizes;
     }
     return JSON.parse(sizesFromCache);
+  }
+  async getSizeById(id: string) {
+    const sizeFromCache = await this.redisService.getValue(id);
+    if (sizeFromCache === 'null' || !sizeFromCache) {
+      const size = await this.prismaService.size.findUnique({
+        where: {
+          id: id,
+        },
+        select: {
+          id: true,
+          name: true,
+          storeId: true,
+          value: true,
+        },
+      });
+      await this.redisService.setValue(id, JSON.stringify(size));
+      return size;
+    }
+    return JSON.parse(sizeFromCache);
+  }
+  async createSize(name: string, storeId: string, value: string) {
+    const size = await this.prismaService.size.create({
+      data: {
+        name: name,
+        storeId: storeId,
+        value: value,
+      },
+    });
+    await this.redisService.setValue(size.id, JSON.stringify(size));
+    await this.redisService.setValue(`getAllSizes+${storeId}`, 'null');
+    return size;
+  }
+  async updateSize(id: string, name: string, value: string) {
+    const size = await this.prismaService.size.update({
+      where: {
+        id: id,
+      },
+      data: {
+        name: name,
+        value: value,
+      },
+    });
+    await this.redisService.setValue(id, JSON.stringify(size));
+    await this.redisService.setValue(`getAllSizes+${size.storeId}`, 'null');
+    return size;
+  }
+  async deleteSize(id: string) {
+    const size = await this.prismaService.size.delete({
+      where: {
+        id: id,
+      },
+    });
+    await this.redisService.deleteValue(id);
+    await this.redisService.deleteValue(`getAllSizes+${size.storeId}`);
+    return 'Delete size successfully';
   }
 }
