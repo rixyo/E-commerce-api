@@ -4,6 +4,7 @@ import {
   IsBoolean,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsString,
   IsUUID,
   ValidateNested,
@@ -20,21 +21,36 @@ export class createProductDto {
   @IsUUID()
   categoryId: string;
   @IsNotEmpty()
-  @IsUUID()
-  colorId: string;
-  @IsNotEmpty()
-  @IsUUID()
-  sizeId: string;
+  @IsString()
+  description: string;
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => Image)
   images: Image[];
-  @IsNotEmpty()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => Size)
+  sizes: Size[];
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => Color)
+  colors: Color[];
+  @IsOptional()
   @IsBoolean()
   isFeatured: boolean;
-  @IsNotEmpty()
+  @IsOptional()
   @IsBoolean()
   isArchived: boolean;
+}
+class Color {
+  @IsString()
+  @IsNotEmpty()
+  value: string;
+}
+class Size {
+  @IsString()
+  @IsNotEmpty()
+  value: string;
 }
 class Image {
   @IsString()

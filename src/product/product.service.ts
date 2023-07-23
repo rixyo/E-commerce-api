@@ -6,9 +6,10 @@ interface CreateProduct {
   name: string;
   price: number;
   categoryId: string;
-  colorId: string;
-  sizeId: string;
   images: { url: string }[];
+  colors: { value: string }[];
+  sizes: { value: string }[];
+  description: string;
 }
 @Injectable()
 export class ProductService {
@@ -31,22 +32,11 @@ export class ProductService {
           id: true,
           name: true,
           price: true,
+          description: true,
           createdAt: true,
           category: {
             select: {
               name: true,
-            },
-          },
-          color: {
-            select: {
-              name: true,
-              value: true,
-            },
-          },
-          size: {
-            select: {
-              name: true,
-              value: true,
             },
           },
           Images: {
@@ -55,6 +45,16 @@ export class ProductService {
               url: true,
             },
             take: 1,
+          },
+          Sizes: {
+            select: {
+              value: true,
+            },
+          },
+          Colors: {
+            select: {
+              value: true,
+            },
           },
         },
         skip: skip,
@@ -89,22 +89,20 @@ export class ProductService {
               name: true,
             },
           },
-          color: {
-            select: {
-              name: true,
-              value: true,
-            },
-          },
-          size: {
-            select: {
-              name: true,
-              value: true,
-            },
-          },
           Images: {
             select: {
               id: true,
               url: true,
+            },
+          },
+          Sizes: {
+            select: {
+              value: true,
+            },
+          },
+          Colors: {
+            select: {
+              value: true,
             },
           },
         },
@@ -118,23 +116,37 @@ export class ProductService {
     const product = await this.prismaService.product.create({
       data: {
         name: body.name,
-        price: body.price,
+        price: body.price.toFixed(2),
         storeId: storeId,
         categoryId: body.categoryId,
-        colorId: body.colorId,
-        sizeId: body.sizeId,
+        description: body.description,
       },
     });
     const productImage = body.images.map((image) => ({
       ...image,
       productId: product.id,
     }));
+    const productColor = body.colors.map((color) => ({
+      ...color,
+      productId: product.id,
+    }));
+    const productSize = body.sizes.map((size) => ({
+      ...size,
+      productId: product.id,
+    }));
     await this.prismaService.image.createMany({
       data: productImage,
     });
-    const updatedRedis = await this.getProductById(product.id);
+    await this.prismaService.productColor.createMany({
+      data: productColor,
+    });
+    await this.prismaService.productSize.createMany({
+      data: productSize,
+    });
+    const updatedRedis = await this.getProductById('null');
     await this.redisService.setValue(product.id, JSON.stringify(updatedRedis));
     await this.redisService.setValue(`getAllProducts+${storeId}`, 'null');
+    return 'Product created successfully';
   }
   async updateProductById(id: string, body: CreateProduct) {
     const product = await this.prismaService.product.update({
@@ -145,8 +157,6 @@ export class ProductService {
         name: body.name,
         price: body.price.toFixed(2),
         categoryId: body.categoryId,
-        colorId: body.colorId,
-        sizeId: body.sizeId,
       },
     });
     await this.redisService.setValue(id, JSON.stringify(product));

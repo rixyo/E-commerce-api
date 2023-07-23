@@ -32,9 +32,9 @@ export class ProductController {
   @Post(':storeId/create')
   async createProduct(
     @Param('storeId', new ParseUUIDPipe()) storeId: string,
-    @Body() data: createProductDto,
+    @Body() body: createProductDto,
   ) {
-    return await this.productService.createProduct(data, storeId);
+    return await this.productService.createProduct(body, storeId);
   }
   @Roles('ADMIN')
   @Delete(':id')

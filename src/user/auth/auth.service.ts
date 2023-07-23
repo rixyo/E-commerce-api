@@ -52,7 +52,7 @@ export class AuthService {
         email: email,
         displayName: displayName,
         passwordHash: passwordHash,
-        userRole: 'ADMIN',
+        userRole: 'USER',
         authType: 'EMAIL',
       },
     });

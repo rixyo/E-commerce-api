@@ -30,6 +30,7 @@ model User {
   authType AuthType
   userRole UserRole @default(USER)
   address Address[]
+  rewiews Rewiew[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -77,7 +78,6 @@ model Size {
   store Store @relation("StoreToSize",fields: [storeId],references: [id],onDelete: Cascade)
   name String
   value String
-  Products Product[] @relation()
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([storeId])
@@ -88,7 +88,6 @@ model Color {
   store Store @relation("StoreToColor",fields: [storeId],references: [id],onDelete: Cascade)
   name String
   value String
-  Products Product[] @relation()
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([storeId])
@@ -102,19 +101,49 @@ model Product {
   name        String
   price       Decimal
   Images      Image[]
+  description String
+  Sizes       ProductSize[]
+  Colors      ProductColor[]
+  rewiews     Rewiew[]
   isFeatured  Boolean   @default(false)
   isArchived  Boolean   @default(false)
-  sizeId      String    
-  size        Size      @relation(fields: [sizeId], references: [id])
-  colorId     String    
-  color       Color     @relation(fields: [colorId], references: [id])
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-
   @@index([storeId])
   @@index([categoryId])
-  @@index([sizeId])
-  @@index([colorId])
+  
+}
+model Rewiew{
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields: [userId],references: [id],onDelete: Cascade)
+  productId String
+  product Product @relation(fields: [productId],references: [id],onDelete: Cascade)
+  rating Int
+  comment String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([userId])
+  @@index([productId])
+}
+model ProductColor {
+  id String @id @default(uuid())
+  productId String
+  product Product @relation(fields: [productId],references: [id],onDelete: Cascade)
+ value String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([productId])
+}
+model ProductSize {
+  id String @id @default(uuid())
+  productId String
+  product Product @relation(fields: [productId],references: [id],onDelete: Cascade)
+  value String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([productId])
 }
 model Image {
   id          String   @id @default(uuid())
