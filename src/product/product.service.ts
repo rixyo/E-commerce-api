@@ -10,6 +10,8 @@ interface CreateProduct {
   colors: { value: string }[];
   sizes: { value: string }[];
   description: string;
+  isFeatured: boolean;
+  isArchived: boolean;
 }
 @Injectable()
 export class ProductService {
@@ -33,6 +35,8 @@ export class ProductService {
           name: true,
           price: true,
           description: true,
+          isArchived: true,
+          isFeatured: true,
           createdAt: true,
           category: {
             select: {
@@ -84,6 +88,9 @@ export class ProductService {
           price: true,
           storeId: true,
           createdAt: true,
+          description: true,
+          isArchived: true,
+          isFeatured: true,
           category: {
             select: {
               name: true,
@@ -120,6 +127,8 @@ export class ProductService {
         storeId: storeId,
         categoryId: body.categoryId,
         description: body.description,
+        isArchived: body.isArchived,
+        isFeatured: body.isFeatured,
       },
     });
     const productImage = body.images.map((image) => ({
@@ -157,9 +166,12 @@ export class ProductService {
         name: body.name,
         price: body.price.toFixed(2),
         categoryId: body.categoryId,
+        description: body.description,
+        isArchived: body.isArchived,
+        isFeatured: body.isFeatured,
       },
     });
-    await this.redisService.setValue(id, JSON.stringify(product));
+    await this.redisService.setValue(id, 'null');
     await this.redisService.setValue(
       `getAllProducts+${product.storeId}`,
       'null',

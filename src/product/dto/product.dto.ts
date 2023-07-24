@@ -35,10 +35,8 @@ export class createProductDto {
   @ValidateNested({ each: true })
   @Type(() => Color)
   colors: Color[];
-  @IsOptional()
   @IsBoolean()
   isFeatured: boolean;
-  @IsOptional()
   @IsBoolean()
   isArchived: boolean;
 }
