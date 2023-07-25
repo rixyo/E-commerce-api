@@ -23,7 +23,7 @@ export class ProductService {
     const productsFromCache = await this.redisService.getValue(
       `getAllProducts+${storeId}`,
     );
-    if (productsFromCache === 'null' || !productsFromCache) {
+    if (!productsFromCache) {
       const skip = (page - 1) * perPage;
       const take = parseInt(`${perPage}`);
       const products = await this.prismaService.product.findMany({
@@ -73,11 +73,11 @@ export class ProductService {
       );
       return products;
     }
-    return JSON.parse(productsFromCache);
+    return productsFromCache;
   }
   async getProductById(id: string) {
     const productFromCache = await this.redisService.getValue(id);
-    if (!productFromCache || productFromCache === 'null') {
+    if (!productFromCache) {
       const product = await this.prismaService.product.findUnique({
         where: {
           id: id,
@@ -117,7 +117,7 @@ export class ProductService {
       await this.redisService.setValue(id, JSON.stringify(product));
       return product;
     }
-    return JSON.parse(productFromCache);
+    return productFromCache;
   }
   async createProduct(body: CreateProduct, storeId: string) {
     const product = await this.prismaService.product.create({
@@ -129,6 +129,38 @@ export class ProductService {
         description: body.description,
         isArchived: body.isArchived,
         isFeatured: body.isFeatured,
+      },
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        description: true,
+        isArchived: true,
+        isFeatured: true,
+        Images: {
+          select: {
+            id: true,
+            url: true,
+          },
+        },
+        Sizes: {
+          select: {
+            id: true,
+            value: true,
+          },
+        },
+        Colors: {
+          select: {
+            id: true,
+            value: true,
+          },
+        },
+        category: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
     const productImage = body.images.map((image) => ({
@@ -143,18 +175,20 @@ export class ProductService {
       ...size,
       productId: product.id,
     }));
-    await this.prismaService.image.createMany({
-      data: productImage,
-    });
-    await this.prismaService.productColor.createMany({
-      data: productColor,
-    });
-    await this.prismaService.productSize.createMany({
-      data: productSize,
-    });
-    const updatedRedis = await this.getProductById('null');
-    await this.redisService.setValue(product.id, JSON.stringify(updatedRedis));
-    await this.redisService.setValue(`getAllProducts+${storeId}`, 'null');
+    await Promise.all([
+      this.prismaService.image.createMany({
+        data: productImage,
+      }),
+      this.prismaService.productColor.createMany({
+        data: productColor,
+      }),
+      this.prismaService.productSize.createMany({
+        data: productSize,
+      }),
+      this.redisService.setValue(product.id, JSON.stringify(product)),
+      this.redisService.setValue(`getAllProducts+${storeId}`, 'null'),
+    ]);
+
     return 'Product created successfully';
   }
   async updateProductById(id: string, body: CreateProduct) {
@@ -170,12 +204,38 @@ export class ProductService {
         isArchived: body.isArchived,
         isFeatured: body.isFeatured,
       },
+      select: {
+        id: true,
+        name: true,
+        storeId: true,
+        price: true,
+        description: true,
+        isArchived: true,
+        isFeatured: true,
+        Images: {
+          select: {
+            id: true,
+            url: true,
+          },
+        },
+        Sizes: {
+          select: {
+            id: true,
+            value: true,
+          },
+        },
+        Colors: {
+          select: {
+            id: true,
+            value: true,
+          },
+        },
+      },
     });
-    await this.redisService.setValue(id, 'null');
-    await this.redisService.setValue(
-      `getAllProducts+${product.storeId}`,
-      'null',
-    );
+    await Promise.all([
+      this.redisService.setValue(id, JSON.stringify(product)),
+      this.redisService.setValue(`getAllProducts+${product.storeId}`, 'null'),
+    ]);
   }
   async deleteProductById(id: string) {
     const product = await this.prismaService.product.delete({
@@ -183,8 +243,10 @@ export class ProductService {
         id: id,
       },
     });
-    await this.redisService.deleteValue(id);
-    await this.redisService.deleteValue(`getAllProducts+${product.storeId}`);
+    await Promise.all([
+      this.redisService.deleteValue(id),
+      this.redisService.deleteValue(`getAllProducts+${product.storeId}`),
+    ]);
     return 'Product deleted successfully';
   }
 }

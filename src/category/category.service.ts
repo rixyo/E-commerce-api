@@ -12,7 +12,7 @@ export class CategoryService {
     const categoriesFromCache = await this.redisService.getValue(
       `getAllCategories+${storeId}`,
     );
-    if (categoriesFromCache === 'null' || !categoriesFromCache) {
+    if (!categoriesFromCache) {
       const categories = await this.prismaService.category.findMany({
         where: {
           storeId: storeId,
@@ -85,8 +85,10 @@ export class CategoryService {
         createdAt: true,
       },
     });
-    await this.redisService.setValue(category.id, JSON.stringify(category));
-    await this.redisService.setValue(`getAllCategories+${storeId}`, null);
+    await Promise.all([
+      this.redisService.setValue(category.id, JSON.stringify(category)),
+      this.redisService.setValue(`getAllCategories+${storeId}`, null),
+    ]);
     return category;
   }
   async updateCategoryById(id: string, name: string) {
@@ -109,11 +111,10 @@ export class CategoryService {
         createdAt: true,
       },
     });
-    await this.redisService.setValue(id, JSON.stringify(category));
-    await this.redisService.setValue(
-      `getAllCategories+${category.storeId}`,
-      null,
-    );
+    await Promise.all([
+      this.redisService.setValue(`getAllCategories+${category.storeId}`, null),
+      this.redisService.setValue(id, JSON.stringify(category)),
+    ]);
     return category;
   }
   async deleteCategoryById(id: string) {
@@ -133,8 +134,12 @@ export class CategoryService {
         createdAt: true,
       },
     });
-    await this.redisService.deleteValue(id);
-    await this.redisService.deleteValue(`getAllCategories+${category.storeId}`);
+    await Promise.all([
+      await this.redisService.deleteValue(id),
+      await this.redisService.deleteValue(
+        `getAllCategories+${category.storeId}`,
+      ),
+    ]);
     return 'Category deleted';
   }
 }

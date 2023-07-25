@@ -69,8 +69,10 @@ export class ColorService {
         value: true,
       },
     });
-    await this.redisService.setValue(color.id, JSON.stringify(color));
-    await this.redisService.setValue(`getAllColors+${storeId}`, 'null');
+    await Promise.all([
+      this.redisService.setValue(color.id, JSON.stringify(color)),
+      this.redisService.setValue(`getAllColors+${storeId}`, 'null'),
+    ]);
     return color;
   }
   async updateColor(id: string, name: string, value: string) {
@@ -89,8 +91,10 @@ export class ColorService {
         value: true,
       },
     });
-    await this.redisService.setValue(id, JSON.stringify(color));
-    await this.redisService.setValue(`getAllColors+${color.storeId}`, 'null');
+    await Promise.all([
+      this.redisService.setValue(id, JSON.stringify(color)),
+      this.redisService.setValue(`getAllColors+${color.storeId}`, 'null'),
+    ]);
   }
   async deleteColor(id: string) {
     const color = await this.prismaService.color.delete({
@@ -98,8 +102,10 @@ export class ColorService {
         id: id,
       },
     });
-    await this.redisService.deleteValue(id);
-    await this.redisService.deleteValue(`getAllColors+${color.storeId}`);
+    await Promise.all([
+      this.redisService.deleteValue(id),
+      this.redisService.deleteValue(`getAllColors+${color.storeId}`),
+    ]);
     return 'Delete color successfully';
   }
 }

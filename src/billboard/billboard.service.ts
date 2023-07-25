@@ -64,11 +64,14 @@ export class BillboardService {
         storeId: true,
       },
     });
+    await Promise.all([
+      this.redisService.setValue(id, JSON.stringify(billboard)),
+      this.redisService.setValue(
+        `getAllBillboard+${billboard.storeId}`,
+        'null',
+      ),
+    ]);
     await this.redisService.setValue(id, JSON.stringify(billboard));
-    await this.redisService.setValue(
-      `getAllBillboard+${billboard.storeId}`,
-      'null',
-    );
     return billboard;
   }
   async deleteBillboardById(id: string) {
@@ -77,8 +80,10 @@ export class BillboardService {
         id: id,
       },
     });
-    await this.redisService.deleteValue(id);
-    await this.redisService.deleteValue(`getAllBillboard+${billboard.storeId}`);
+    await Promise.all([
+      this.redisService.deleteValue(id),
+      this.redisService.deleteValue(`getAllBillboard+${billboard.storeId}`),
+    ]);
     return 'deleted successfully';
   }
   async getAllBillboard(storeId: string) {

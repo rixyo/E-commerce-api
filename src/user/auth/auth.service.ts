@@ -80,7 +80,7 @@ export class AuthService {
   }
   async currentUser(userId: string) {
     const Cacheduser = await this.redis.getValue(userId);
-    if (!Cacheduser || Cacheduser === 'null') {
+    if (!Cacheduser) {
       const user = await this.prisma.user.findUnique({
         where: {
           id: userId,
