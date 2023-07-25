@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RedisService } from 'src/redis/redis.service';
 
@@ -13,19 +13,32 @@ interface CreateProduct {
   isFeatured: boolean;
   isArchived: boolean;
 }
+interface Filters {
+  price?: {
+    gte?: number;
+    lte?: number;
+  };
+  category: {
+    name: string;
+  };
+  sizes?: {
+    value: string;
+  };
+  colors?: {
+    value: string;
+  };
+}
 @Injectable()
 export class ProductService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly redisService: RedisService,
   ) {}
-  async getAllProducts(storeId: string, page: number, perPage: number) {
+  async getAllProducts(storeId: string) {
     const productsFromCache = await this.redisService.getValue(
       `getAllProducts+${storeId}`,
     );
-    if (!productsFromCache) {
-      const skip = (page - 1) * perPage;
-      const take = parseInt(`${perPage}`);
+    if (!productsFromCache || productsFromCache === 'null') {
       const products = await this.prismaService.product.findMany({
         where: {
           storeId: storeId,
@@ -40,6 +53,7 @@ export class ProductService {
           createdAt: true,
           category: {
             select: {
+              id: true,
               name: true,
             },
           },
@@ -61,23 +75,22 @@ export class ProductService {
             },
           },
         },
-        skip: skip,
-        take: take,
         orderBy: {
           createdAt: 'desc',
         },
       });
+      if (!products) throw new NotFoundException('Products not found');
       await this.redisService.setValue(
         `getAllProducts+${storeId}`,
         JSON.stringify(products),
       );
       return products;
     }
-    return productsFromCache;
+    return JSON.parse(productsFromCache);
   }
   async getProductById(id: string) {
     const productFromCache = await this.redisService.getValue(id);
-    if (!productFromCache) {
+    if (!productFromCache || productFromCache === 'null') {
       const product = await this.prismaService.product.findUnique({
         where: {
           id: id,
@@ -93,6 +106,7 @@ export class ProductService {
           isFeatured: true,
           category: {
             select: {
+              id: true,
               name: true,
             },
           },
@@ -114,10 +128,11 @@ export class ProductService {
           },
         },
       });
+      if (!product) throw new NotFoundException('Product not found');
       await this.redisService.setValue(id, JSON.stringify(product));
       return product;
     }
-    return productFromCache;
+    return JSON.parse(productFromCache);
   }
   async createProduct(body: CreateProduct, storeId: string) {
     const product = await this.prismaService.product.create({
@@ -129,38 +144,6 @@ export class ProductService {
         description: body.description,
         isArchived: body.isArchived,
         isFeatured: body.isFeatured,
-      },
-      select: {
-        id: true,
-        name: true,
-        price: true,
-        description: true,
-        isArchived: true,
-        isFeatured: true,
-        Images: {
-          select: {
-            id: true,
-            url: true,
-          },
-        },
-        Sizes: {
-          select: {
-            id: true,
-            value: true,
-          },
-        },
-        Colors: {
-          select: {
-            id: true,
-            value: true,
-          },
-        },
-        category: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
       },
     });
     const productImage = body.images.map((image) => ({
@@ -185,9 +168,10 @@ export class ProductService {
       this.prismaService.productSize.createMany({
         data: productSize,
       }),
-      this.redisService.setValue(product.id, JSON.stringify(product)),
       this.redisService.setValue(`getAllProducts+${storeId}`, 'null'),
     ]);
+    const addProduct = await this.getProductById(product.id);
+    await this.redisService.setValue(product.id, JSON.stringify(addProduct));
 
     return 'Product created successfully';
   }
@@ -204,10 +188,72 @@ export class ProductService {
         isArchived: body.isArchived,
         isFeatured: body.isFeatured,
       },
+    });
+    const productColor = body.colors.map((color) => ({
+      ...color,
+      productId: product.id,
+    }));
+    const productSize = body.sizes.map((size) => ({
+      ...size,
+      productId: product.id,
+    }));
+    await Promise.all([
+      this.prismaService.productColor.deleteMany({
+        where: {
+          productId: productColor[0].productId,
+        },
+      }),
+      this.prismaService.productSize.deleteMany({
+        where: {
+          productId: productSize[0].productId,
+        },
+      }),
+      this.prismaService.productColor.createMany({
+        data: productColor,
+      }),
+      this.prismaService.productSize.createMany({
+        data: productSize,
+      }),
+      this.redisService.setValue(`getAllProducts+${product.storeId}`, 'null'),
+      this.redisService.deleteValue(product.id),
+    ]);
+    const addProduct = await this.getProductById(product.id);
+    await this.redisService.setValue(product.id, JSON.stringify(addProduct));
+    return ' Product updated successfully ';
+  }
+  async deleteProductById(id: string) {
+    const product = await this.prismaService.product.delete({
+      where: {
+        id: id,
+      },
+    });
+    await Promise.all([
+      this.redisService.deleteValue(id),
+      this.redisService.deleteValue(`getAllProducts+${product.storeId}`),
+    ]);
+    return 'Product deleted successfully';
+  }
+  async searchProduct(query: string, page: number, perpage: number) {
+    const skip = (page - 1) * perpage;
+    const take = parseInt(`${perpage}`);
+    const products = await this.prismaService.product.findMany({
+      where: {
+        OR: [
+          {
+            name: {
+              contains: query,
+            },
+            category: {
+              name: {
+                contains: query,
+              },
+            },
+          },
+        ],
+      },
       select: {
         id: true,
         name: true,
-        storeId: true,
         price: true,
         description: true,
         isArchived: true,
@@ -217,6 +263,7 @@ export class ProductService {
             id: true,
             url: true,
           },
+          take: 1,
         },
         Sizes: {
           select: {
@@ -230,23 +277,69 @@ export class ProductService {
             value: true,
           },
         },
+        category: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        rewiews: {
+          select: {
+            rating: true,
+          },
+        },
       },
+      take: take,
+      skip: skip,
     });
-    await Promise.all([
-      this.redisService.setValue(id, JSON.stringify(product)),
-      this.redisService.setValue(`getAllProducts+${product.storeId}`, 'null'),
-    ]);
+    return products;
   }
-  async deleteProductById(id: string) {
-    const product = await this.prismaService.product.delete({
-      where: {
-        id: id,
+  async filterProduct(filters: Filters, page: number, perPage: number) {
+    const skip = (page - 1) * perPage;
+    const take = parseInt(`${perPage}`);
+    const products = await this.prismaService.product.findMany({
+      where: filters,
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        description: true,
+        isArchived: true,
+        isFeatured: true,
+        rewiews: {
+          select: {
+            rating: true,
+          },
+        },
+        Images: {
+          select: {
+            id: true,
+            url: true,
+          },
+          take: 1,
+        },
+        Sizes: {
+          select: {
+            id: true,
+            value: true,
+          },
+        },
+        Colors: {
+          select: {
+            id: true,
+            value: true,
+          },
+        },
+        category: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
+      skip: skip,
+      take: take,
     });
-    await Promise.all([
-      this.redisService.deleteValue(id),
-      this.redisService.deleteValue(`getAllProducts+${product.storeId}`),
-    ]);
-    return 'Product deleted successfully';
+    return products;
   }
 }

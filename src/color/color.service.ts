@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RedisService } from 'src/redis/redis.service';
 
@@ -28,6 +28,7 @@ export class ColorService {
           createdAt: 'desc',
         },
       });
+      if (!colors) throw new NotFoundException('Colors not found');
       await this.redisService.setValue(
         `getAllColors+${storeId}`,
         JSON.stringify(colors),
@@ -50,6 +51,7 @@ export class ColorService {
           value: true,
         },
       });
+      if (!color) throw new NotFoundException('Color not found');
       await this.redisService.setValue(id, JSON.stringify(color));
       return color;
     }

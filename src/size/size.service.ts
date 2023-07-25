@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RedisService } from 'src/redis/redis.service';
 
@@ -28,6 +28,7 @@ export class SizeService {
           createdAt: 'desc',
         },
       });
+      if (!sizes) throw new NotFoundException('Sizes not found');
       await this.redisService.setValue(
         `getAllSizes+${storeId}`,
         JSON.stringify(sizes),
@@ -50,6 +51,7 @@ export class SizeService {
           value: true,
         },
       });
+      if (!size) throw new NotFoundException('Size not found');
       await this.redisService.setValue(id, JSON.stringify(size));
       return size;
     }
