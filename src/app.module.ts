@@ -19,9 +19,22 @@ import { CategoryModule } from './category/category.module';
 import { SizeModule } from './size/size.module';
 import { ColorModule } from './color/color.module';
 import { ProductModule } from './product/product.module';
+import { OrderModule } from './order/order.module';
 
 @Module({
-  imports: [StoreModule, PrismaModule, UserModule, PassportModule, RedisModule, BillboardModule, CategoryModule, SizeModule, ColorModule, ProductModule],
+  imports: [
+    StoreModule,
+    PrismaModule,
+    UserModule,
+    PassportModule,
+    RedisModule,
+    BillboardModule,
+    CategoryModule,
+    SizeModule,
+    ColorModule,
+    ProductModule,
+    OrderModule,
+  ],
   controllers: [AppController, StoreController, BillboardController],
   providers: [
     AppService,

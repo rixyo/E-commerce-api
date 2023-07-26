@@ -16,6 +16,34 @@ import { createProductDto } from './dto/product.dto';
 @Controller('product')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
+  @Get('result')
+  async searchProduct(@Query('search_query') search_query: string) {
+    if (!search_query || search_query === '') return [];
+    return await this.productService.searchProduct(search_query);
+  }
+  @Get('')
+  async filterProducts(
+    @Query('page') page: number,
+    @Query('perPage') perPage: number,
+    @Query('category') category?: { name: string },
+    @Query('minPrice') minPrice?: string,
+    @Query('maxPrice') maxPrice?: string,
+    @Query('sizes') sizes?: { value: string },
+  ) {
+    const price =
+      maxPrice || minPrice
+        ? {
+            ...(minPrice && { gte: parseInt(minPrice) }),
+            ...(maxPrice && { lte: parseInt(maxPrice) }),
+          }
+        : undefined;
+    const filters = {
+      ...(category && { category }),
+      ...(price && { price }),
+      ...(sizes && { sizes }),
+    };
+    return await this.productService.filterProduct(filters, page, perPage);
+  }
   @Get(':storeId/findall')
   async getAllProducts(@Param('storeId', new ParseUUIDPipe()) storeId: string) {
     return await this.productService.getAllProducts(storeId);
@@ -45,36 +73,5 @@ export class ProductController {
     @Body() data: createProductDto,
   ) {
     return await this.productService.updateProductById(id, data);
-  }
-  @Get('')
-  async searchProduct(
-    @Param('query') query: string,
-    @Query('page') page: number,
-    @Query('perpage') perpage: number,
-  ) {
-    return await this.productService.searchProduct(query, page, perpage);
-  }
-  @Get('')
-  async filterProducts(
-    @Query('page') page: number,
-    @Query('perPage') perPage: number,
-    @Query('category') category?: { name: string },
-    @Query('minPrice') minPrice?: string,
-    @Query('maxPrice') maxPrice?: string,
-    @Query('sizes') sizes?: { value: string },
-  ) {
-    const price =
-      maxPrice || minPrice
-        ? {
-            ...(minPrice && { gte: parseInt(minPrice) }),
-            ...(maxPrice && { lte: parseInt(maxPrice) }),
-          }
-        : undefined;
-    const filters = {
-      ...(category && { category }),
-      ...(price && { price }),
-      ...(sizes && { sizes }),
-    };
-    return await this.productService.filterProduct(filters, page, perPage);
   }
 }

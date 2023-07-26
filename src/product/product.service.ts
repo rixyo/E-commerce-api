@@ -233,9 +233,7 @@ export class ProductService {
     ]);
     return 'Product deleted successfully';
   }
-  async searchProduct(query: string, page: number, perpage: number) {
-    const skip = (page - 1) * perpage;
-    const take = parseInt(`${perpage}`);
+  async searchProduct(query: string) {
     const products = await this.prismaService.product.findMany({
       where: {
         OR: [
@@ -289,57 +287,61 @@ export class ProductService {
           },
         },
       },
-      take: take,
-      skip: skip,
     });
+    if (!products) return [];
     return products;
   }
   async filterProduct(filters: Filters, page: number, perPage: number) {
     const skip = (page - 1) * perPage;
     const take = parseInt(`${perPage}`);
-    const products = await this.prismaService.product.findMany({
-      where: filters,
-      select: {
-        id: true,
-        name: true,
-        price: true,
-        description: true,
-        isArchived: true,
-        isFeatured: true,
-        rewiews: {
-          select: {
-            rating: true,
+    try {
+      const products = await this.prismaService.product.findMany({
+        where: filters,
+        select: {
+          id: true,
+          name: true,
+          price: true,
+          description: true,
+          isArchived: true,
+          isFeatured: true,
+          rewiews: {
+            select: {
+              rating: true,
+            },
+          },
+          Images: {
+            select: {
+              id: true,
+              url: true,
+            },
+            take: 1,
+          },
+          Sizes: {
+            select: {
+              id: true,
+              value: true,
+            },
+          },
+          Colors: {
+            select: {
+              id: true,
+              value: true,
+            },
+          },
+          category: {
+            select: {
+              id: true,
+              name: true,
+            },
           },
         },
-        Images: {
-          select: {
-            id: true,
-            url: true,
-          },
-          take: 1,
-        },
-        Sizes: {
-          select: {
-            id: true,
-            value: true,
-          },
-        },
-        Colors: {
-          select: {
-            id: true,
-            value: true,
-          },
-        },
-        category: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-      skip: skip,
-      take: take,
-    });
-    return products;
+        skip: skip,
+        take: take,
+      });
+      return products;
+    } catch (error) {
+      console.log(error);
+      return [];
+    }
   }
 }
