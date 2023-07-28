@@ -8,6 +8,7 @@ import { UserRole } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { RedisService } from 'src/redis/redis.service';
+import { UpdateUserDTO } from './dot/auth.dto';
 @Injectable()
 export class AuthService {
   constructor(
@@ -28,11 +29,13 @@ export class AuthService {
       },
     });
     if (!user) throw new ConflictException('User not found');
-    else if (
-      user &&
-      user.authType === 'EMAIL' &&
-      (await this.validatePassword(password, user.passwordHash))
-    ) {
+    else if (user && user.authType === 'EMAIL') {
+      const doesPasswordMatch = await this.validatePassword(
+        password,
+        user.passwordHash,
+      );
+      if (!doesPasswordMatch)
+        throw new ConflictException('Something went wrong');
       const token = this.generateJwtToken(
         user.id,
         user.displayName,
@@ -46,6 +49,12 @@ export class AuthService {
     displayName: string,
     password: string,
   ) {
+    const userExists = await this.prisma.user.findUnique({
+      where: {
+        email: email,
+      },
+    });
+    if (userExists) throw new ConflictException('Something went wrong');
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await this.prisma.user.create({
       data: {
@@ -90,6 +99,14 @@ export class AuthService {
           displayName: true,
           email: true,
           userRole: true,
+          address: {
+            select: {
+              addressType: true,
+              city: true,
+              state: true,
+              street: true,
+            },
+          },
         },
       });
       if (!user) throw new NotFoundException('User not found');
@@ -97,5 +114,39 @@ export class AuthService {
       return user;
     }
     return JSON.parse(Cacheduser);
+  }
+  async updateUserInfo(data: UpdateUserDTO, userId: string) {
+    const user = await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        displayName: data.displayName,
+        email: data.email,
+        avatarUrl: data.avaterUrl,
+      },
+    });
+    if (data.address) {
+      await this.prisma.address.create({
+        data: {
+          addressType: data.address.adderssType,
+          city: data.address.city,
+          state: data.address.state,
+          street: data.address.street,
+          zip: data.address.zip,
+          user: {
+            connect: {
+              id: userId,
+            },
+          },
+        },
+      });
+    }
+    Promise.all([
+      this.redis.deleteValue(userId),
+      this.currentUser(userId),
+      this.redis.setValue(userId, JSON.stringify(user)),
+    ]);
+    return 'Information updated successfully';
   }
 }

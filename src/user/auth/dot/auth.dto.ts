@@ -31,3 +31,24 @@ export class ResponseUserDTO {
     Object.assign(this, partial);
   }
 }
+export class UpdateUserDTO {
+  @IsString()
+  displayName: string;
+  @IsEmail()
+  email: string;
+  @IsString()
+  avaterUrl: string;
+  address: Address;
+}
+class Address {
+  adderssType: AddressType;
+  street: string;
+  city: string;
+  state: string;
+  zip: string;
+}
+enum AddressType {
+  HOME = 'HOME',
+  WORK = 'WORK',
+  OTHER = 'OTHER',
+}

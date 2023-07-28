@@ -1,15 +1,11 @@
 import { Controller, Get, Post, Body } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginDTO, SingupDTO } from './dot/auth.dto';
+import { LoginDTO, SingupDTO, UpdateUserDTO } from './dot/auth.dto';
 import { Roles } from 'src/decoratores/role.decorator';
 import { User, userType } from '../decorators/user.decrator';
-import { RedisService } from 'src/redis/redis.service';
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly redis: RedisService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
   @Post('login')
   async login(@Body() body: LoginDTO) {
     return this.authService.validateUserFromEmailPassword(
@@ -25,9 +21,14 @@ export class AuthController {
       body.password,
     );
   }
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'USER')
   @Get('me')
   async me(@User() user: userType) {
     return this.authService.currentUser(user.userId);
+  }
+  @Roles('ADMIN', 'USER')
+  @Post('update')
+  async update(@User() user: userType, @Body() body: UpdateUserDTO) {
+    return this.authService.updateUserInfo(body, user.userId);
   }
 }
