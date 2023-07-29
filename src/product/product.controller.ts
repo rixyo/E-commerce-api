@@ -24,11 +24,12 @@ export class ProductController {
   @Get('')
   async filterProducts(
     @Query('page') page: number,
-    @Query('perPage') perPage: number,
     @Query('category') category?: { name: string },
     @Query('minPrice') minPrice?: string,
     @Query('maxPrice') maxPrice?: string,
     @Query('sizes') sizes?: { value: string },
+    @Query('colors') colors?: { value: string },
+    @Query('isFeatured') isFeatured?: boolean,
   ) {
     const price =
       maxPrice || minPrice
@@ -41,8 +42,10 @@ export class ProductController {
       ...(category && { category }),
       ...(price && { price }),
       ...(sizes && { sizes }),
+      ...(colors && { colors }),
+      ...(isFeatured && { isFeatured }),
     };
-    return await this.productService.filterProduct(filters, page, perPage);
+    return await this.productService.filterProduct(filters, page, 10);
   }
   @Get(':storeId/findall')
   async getAllProducts(@Param('storeId', new ParseUUIDPipe()) storeId: string) {

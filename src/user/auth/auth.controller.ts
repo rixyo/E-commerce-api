@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDTO, SingupDTO, UpdateUserDTO } from './dot/auth.dto';
 import { Roles } from 'src/decoratores/role.decorator';
@@ -27,7 +27,7 @@ export class AuthController {
     return this.authService.currentUser(user.userId);
   }
   @Roles('ADMIN', 'USER')
-  @Post('update')
+  @Patch('update')
   async update(@User() user: userType, @Body() body: UpdateUserDTO) {
     return this.authService.updateUserInfo(body, user.userId);
   }

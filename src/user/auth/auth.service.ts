@@ -99,14 +99,7 @@ export class AuthService {
           displayName: true,
           email: true,
           userRole: true,
-          address: {
-            select: {
-              addressType: true,
-              city: true,
-              state: true,
-              street: true,
-            },
-          },
+          avatarUrl: true,
         },
       });
       if (!user) throw new NotFoundException('User not found');
@@ -126,22 +119,6 @@ export class AuthService {
         avatarUrl: data.avaterUrl,
       },
     });
-    if (data.address) {
-      await this.prisma.address.create({
-        data: {
-          addressType: data.address.adderssType,
-          city: data.address.city,
-          state: data.address.state,
-          street: data.address.street,
-          zip: data.address.zip,
-          user: {
-            connect: {
-              id: userId,
-            },
-          },
-        },
-      });
-    }
     Promise.all([
       this.redis.deleteValue(userId),
       this.currentUser(userId),

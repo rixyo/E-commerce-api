@@ -30,25 +30,11 @@ model User {
   avatarUrl String?
   authType AuthType
   userRole UserRole @default(USER)
-  address Address[]
   rewiews Rewiew[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-model Address {
-  id String @id @default(uuid())
-  addressType AddressType
-  street String
-  city String
-  state String
-  zip String
-  userId String
- user User @relation(fields: [userId],references: [id],onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
-  @@index([userId])
-}
 model Billboard {
   id String @id @default(uuid())
   storeId String

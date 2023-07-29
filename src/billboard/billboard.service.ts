@@ -23,6 +23,7 @@ export class BillboardService {
       },
     });
     await this.redisService.setValue(billboard.id, JSON.stringify(billboard));
+    await this.redisService.setValue('getBillboards', 'null');
     await this.redisService.setValue(
       `getAllBillboard+${billboard.storeId}`,
       'null',
@@ -70,6 +71,7 @@ export class BillboardService {
         `getAllBillboard+${billboard.storeId}`,
         'null',
       ),
+      this.redisService.setValue('getBillboards', 'null'),
     ]);
     await this.redisService.setValue(id, JSON.stringify(billboard));
     return billboard;
@@ -81,6 +83,7 @@ export class BillboardService {
       },
     });
     await Promise.all([
+      this.redisService.deleteValue('getBillboards'),
       this.redisService.deleteValue(id),
       this.redisService.deleteValue(`getAllBillboard+${billboard.storeId}`),
     ]);
@@ -110,6 +113,30 @@ export class BillboardService {
       }
       await this.redisService.setValue(
         `getAllBillboard+${storeId}`,
+        JSON.stringify(billboards),
+      );
+      return billboards;
+    }
+    return JSON.parse(cachedBillboards);
+  }
+  async getBillboards() {
+    const cachedBillboards = await this.redisService.getValue('getBillboards');
+    if (cachedBillboards === 'null' || !cachedBillboards) {
+      const billboards = await this.prismaService.billboard.findMany({
+        select: {
+          id: true,
+          label: true,
+          imageUrl: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+      if (!billboards || billboards.length === 0) {
+        throw new NotFoundException('Billboards not found');
+      }
+      await this.redisService.setValue(
+        'getBillboards',
         JSON.stringify(billboards),
       );
       return billboards;

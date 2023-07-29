@@ -15,6 +15,10 @@ import { createBillboardDto } from './dto/billboard.dto';
 @Controller('billboard')
 export class BillboardController {
   constructor(private readonly billboardService: BillboardService) {}
+  @Get('')
+  async getBillboards() {
+    return await this.billboardService.getBillboards();
+  }
   @Roles('ADMIN')
   @Post(':id/create')
   async createBillboard(

@@ -142,4 +142,34 @@ export class CategoryService {
     ]);
     return 'Category deleted';
   }
+  async getCategories() {
+    const categoriesFromCache = await this.redisService.getValue(
+      ' categories ',
+    );
+    if (!categoriesFromCache || categoriesFromCache === 'null') {
+      const categories = await this.prismaService.category.findMany({
+        select: {
+          id: true,
+          name: true,
+          storeId: true,
+          billboard: {
+            select: {
+              label: true,
+            },
+          },
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+      if (!categories) throw new NotFoundException('Categories not found');
+      await this.redisService.setValue(
+        ' categories ',
+        JSON.stringify(categories),
+      );
+      return categories;
+    }
+    return JSON.parse(categoriesFromCache);
+  }
 }

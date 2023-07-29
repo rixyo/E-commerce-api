@@ -38,17 +38,4 @@ export class UpdateUserDTO {
   email: string;
   @IsString()
   avaterUrl: string;
-  address: Address;
-}
-class Address {
-  adderssType: AddressType;
-  street: string;
-  city: string;
-  state: string;
-  zip: string;
-}
-enum AddressType {
-  HOME = 'HOME',
-  WORK = 'WORK',
-  OTHER = 'OTHER',
 }

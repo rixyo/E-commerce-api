@@ -27,6 +27,7 @@ interface Filters {
   colors?: {
     value: string;
   };
+  isFeatured?: boolean;
 }
 @Injectable()
 export class ProductService {

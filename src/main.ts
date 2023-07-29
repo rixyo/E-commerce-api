@@ -14,8 +14,9 @@ async function main() {
     }),
   );
   app.use(cookieParser());
+  const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
   app.enableCors({
-    origin: process.env.DEV_CLIENT_URL,
+    origin: allowedOrigins,
     credentials: true,
   });
   await app.listen(5000);
