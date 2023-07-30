@@ -2,6 +2,9 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RedisService } from 'src/redis/redis.service';
 
+type Filers = {
+  gender?: string;
+};
 @Injectable()
 export class CategoryService {
   constructor(
@@ -21,6 +24,7 @@ export class CategoryService {
           id: true,
           name: true,
           storeId: true,
+          gender: true,
           billboard: {
             select: {
               label: true,
@@ -51,6 +55,7 @@ export class CategoryService {
         select: {
           id: true,
           name: true,
+          gender: true,
           storeId: true,
           billboard: {
             select: {
@@ -66,16 +71,23 @@ export class CategoryService {
     }
     return JSON.parse(categoryFromCache);
   }
-  async createCategory(name: string, storeId: string, billboardId: string) {
+  async createCategory(
+    name: string,
+    storeId: string,
+    billboardId: string,
+    gender: string,
+  ) {
     const category = await this.prismaService.category.create({
       data: {
         name: name,
         storeId: storeId,
         billboardId: billboardId,
+        gender: gender,
       },
       select: {
         id: true,
         name: true,
+        gender: true,
         storeId: true,
         billboard: {
           select: {
@@ -142,34 +154,31 @@ export class CategoryService {
     ]);
     return 'Category deleted';
   }
-  async getCategories() {
-    const categoriesFromCache = await this.redisService.getValue(
-      ' categories ',
-    );
-    if (!categoriesFromCache || categoriesFromCache === 'null') {
-      const categories = await this.prismaService.category.findMany({
-        select: {
-          id: true,
-          name: true,
-          storeId: true,
-          billboard: {
-            select: {
-              label: true,
-            },
+  async getCategories(filerts: Filers) {
+    const categories = await this.prismaService.category.findMany({
+      where: {
+        gender: filerts.gender,
+      },
+      select: {
+        id: true,
+        name: true,
+        storeId: true,
+        billboard: {
+          select: {
+            label: true,
           },
-          createdAt: true,
         },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      });
-      if (!categories) throw new NotFoundException('Categories not found');
-      await this.redisService.setValue(
-        ' categories ',
-        JSON.stringify(categories),
-      );
-      return categories;
-    }
-    return JSON.parse(categoriesFromCache);
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+    if (!categories) throw new NotFoundException('Categories not found');
+    await this.redisService.setValue(
+      ' categories ',
+      JSON.stringify(categories),
+    );
+    return categories;
   }
 }

@@ -49,7 +49,6 @@ export class BillboardController {
       data.imageUrl,
     );
   }
-  @Roles('ADMIN')
   @Get(':storeId/findAll')
   async findAllBillboards(
     @Param('storeId', new ParseUUIDPipe()) storeId: string,

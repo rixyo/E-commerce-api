@@ -54,6 +54,7 @@ model Category {
   billboard Billboard @relation(fields: [billboardId],references: [id],onDelete: Cascade)
   Products Product[] @relation("CategoryToProduct")
   name String
+  gender String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([storeId])
@@ -148,7 +149,6 @@ model ProductColor {
   productId String
   product Product @relation(fields: [productId],references: [id],onDelete: Cascade)
  value String
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([productId])
@@ -171,11 +171,6 @@ model Image {
   updatedAt   DateTime @updatedAt
 
   @@index([productId])
-}
-enum AddressType {
-  HOME
-  WORK
-  OTHER
 }
 enum AuthType {
   GOOGLE

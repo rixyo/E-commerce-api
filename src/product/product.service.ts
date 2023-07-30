@@ -18,7 +18,7 @@ interface Filters {
     gte?: number;
     lte?: number;
   };
-  category: {
+  category?: {
     name: string;
   };
   sizes?: {
@@ -289,7 +289,7 @@ export class ProductService {
         },
       },
     });
-    if (!products) return [];
+    if (!products) return 'No products found';
     return products;
   }
   async filterProduct(filters: Filters, page: number, perPage: number) {
@@ -336,13 +336,16 @@ export class ProductService {
             },
           },
         },
+        orderBy: {
+          createdAt: 'desc',
+        },
         skip: skip,
         take: take,
       });
       return products;
     } catch (error) {
       console.log(error);
-      return [];
+      return "Can't filter products";
     }
   }
 }

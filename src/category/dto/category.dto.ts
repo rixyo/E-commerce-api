@@ -22,4 +22,7 @@ export class CreateCategoryDto {
   @IsUUID()
   @IsNotEmpty()
   billboardId: string;
+  @IsNotEmpty()
+  @IsString()
+  gender: string;
 }

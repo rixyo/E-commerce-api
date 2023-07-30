@@ -12,7 +12,7 @@ export class SizeService {
     const sizesFromCache = await this.redisService.getValue(
       `getAllSizes+${storeId}`,
     );
-    if (!sizesFromCache) {
+    if (!sizesFromCache || sizesFromCache === 'null') {
       const sizes = await this.prismaService.size.findMany({
         where: {
           storeId: storeId,

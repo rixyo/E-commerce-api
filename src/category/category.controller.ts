@@ -7,6 +7,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { CreateCategoryDto } from './dto/category.dto';
 import { CategoryService } from './category.service';
@@ -16,8 +17,11 @@ import { Roles } from 'src/decoratores/role.decorator';
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
   @Get('')
-  async getCategories() {
-    return await this.categoryService.getCategories();
+  async getCategories(@Query('gender') gender?: string) {
+    const filerts = {
+      ...(gender && { gender }),
+    };
+    return await this.categoryService.getCategories(filerts);
   }
 
   @Get(':storeId/findall')
@@ -40,6 +44,7 @@ export class CategoryController {
       data.name,
       storeId,
       data.billboardId,
+      data.gender,
     );
   }
   @Roles('ADMIN')
