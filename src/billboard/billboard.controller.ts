@@ -25,11 +25,7 @@ export class BillboardController {
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() data: createBillboardDto,
   ) {
-    return await this.billboardService.createBillboard(
-      data.label,
-      data.imageUrl,
-      id,
-    );
+    return await this.billboardService.createBillboard(data, id);
   }
   @Roles('ADMIN')
   @Get(':id')
@@ -43,11 +39,7 @@ export class BillboardController {
     @Param('storeId', new ParseUUIDPipe()) storeId: string,
     @Body() data: createBillboardDto,
   ) {
-    return await this.billboardService.updateBillboardById(
-      id,
-      data.label,
-      data.imageUrl,
-    );
+    return await this.billboardService.updateBillboardById(id, data);
   }
   @Get(':storeId/findAll')
   async findAllBillboards(

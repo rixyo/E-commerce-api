@@ -5,6 +5,12 @@ import { RedisService } from 'src/redis/redis.service';
 type Filers = {
   gender?: string;
 };
+interface CreateCategory {
+  name: string;
+  billboardId: string;
+  gender: string;
+  imageUrl: string;
+}
 @Injectable()
 export class CategoryService {
   constructor(
@@ -15,7 +21,7 @@ export class CategoryService {
     const categoriesFromCache = await this.redisService.getValue(
       `getAllCategories+${storeId}`,
     );
-    if (!categoriesFromCache) {
+    if (!categoriesFromCache || categoriesFromCache === 'null') {
       const categories = await this.prismaService.category.findMany({
         where: {
           storeId: storeId,
@@ -25,8 +31,10 @@ export class CategoryService {
           name: true,
           storeId: true,
           gender: true,
+          imageUrl: true,
           billboard: {
             select: {
+              id: true,
               label: true,
             },
           },
@@ -56,9 +64,11 @@ export class CategoryService {
           id: true,
           name: true,
           gender: true,
+          imageUrl: true,
           storeId: true,
           billboard: {
             select: {
+              id: true,
               label: true,
             },
           },
@@ -71,88 +81,67 @@ export class CategoryService {
     }
     return JSON.parse(categoryFromCache);
   }
-  async createCategory(
-    name: string,
-    storeId: string,
-    billboardId: string,
-    gender: string,
-  ) {
-    const category = await this.prismaService.category.create({
-      data: {
-        name: name,
-        storeId: storeId,
-        billboardId: billboardId,
-        gender: gender,
-      },
-      select: {
-        id: true,
-        name: true,
-        gender: true,
-        storeId: true,
-        billboard: {
-          select: {
-            label: true,
-          },
+  async createCategory(data: CreateCategory, storeId: string) {
+    try {
+      const category = await this.prismaService.category.create({
+        data: {
+          name: data.name,
+          storeId: storeId,
+          billboardId: data.billboardId,
+          gender: data.gender,
+          imageUrl: data.imageUrl,
         },
-        createdAt: true,
-      },
-    });
-    await Promise.all([
-      this.redisService.setValue(category.id, JSON.stringify(category)),
-      this.redisService.setValue(`getAllCategories+${storeId}`, null),
-    ]);
-    return category;
+      });
+      await Promise.all([
+        this.redisService.setValue(category.id, 'null'),
+        this.redisService.setValue(`getAllCategories+${storeId}`, 'null'),
+      ]);
+      return category;
+    } catch (error) {
+      throw new NotFoundException(error.message);
+    }
   }
-  async updateCategoryById(id: string, name: string) {
-    const category = await this.prismaService.category.update({
-      where: {
-        id: id,
-      },
-      data: {
-        name: name,
-      },
-      select: {
-        id: true,
-        name: true,
-        storeId: true,
-        billboard: {
-          select: {
-            label: true,
-          },
+  async updateCategoryById(id: string, data: CreateCategory) {
+    try {
+      const category = await this.prismaService.category.update({
+        where: {
+          id: id,
         },
-        createdAt: true,
-      },
-    });
-    await Promise.all([
-      this.redisService.setValue(`getAllCategories+${category.storeId}`, null),
-      this.redisService.setValue(id, JSON.stringify(category)),
-    ]);
-    return category;
+        data: {
+          name: data.name,
+          gender: data.gender,
+          imageUrl: data.imageUrl,
+        },
+      });
+      await Promise.all([
+        this.redisService.setValue(
+          `getAllCategories+${category.storeId}`,
+          'null',
+        ),
+        this.redisService.setValue(id, 'null'),
+      ]);
+      return category;
+    } catch (error) {
+      throw new NotFoundException(error.message);
+    }
   }
   async deleteCategoryById(id: string) {
-    const category = await this.prismaService.category.delete({
-      where: {
-        id: id,
-      },
-      select: {
-        id: true,
-        name: true,
-        storeId: true,
-        billboard: {
-          select: {
-            label: true,
-          },
+    try {
+      const category = await this.prismaService.category.delete({
+        where: {
+          id: id,
         },
-        createdAt: true,
-      },
-    });
-    await Promise.all([
-      await this.redisService.deleteValue(id),
-      await this.redisService.deleteValue(
-        `getAllCategories+${category.storeId}`,
-      ),
-    ]);
-    return 'Category deleted';
+      });
+      await Promise.all([
+        await this.redisService.deleteValue(id),
+        await this.redisService.deleteValue(
+          `getAllCategories+${category.storeId}`,
+        ),
+      ]);
+      return 'Category deleted';
+    } catch (error) {
+      throw new NotFoundException(error.message);
+    }
   }
   async getCategories(filerts: Filers) {
     const categories = await this.prismaService.category.findMany({
@@ -163,6 +152,7 @@ export class CategoryService {
         id: true,
         name: true,
         storeId: true,
+        imageUrl: true,
         billboard: {
           select: {
             label: true,
@@ -175,10 +165,6 @@ export class CategoryService {
       },
     });
     if (!categories) throw new NotFoundException('Categories not found');
-    await this.redisService.setValue(
-      ' categories ',
-      JSON.stringify(categories),
-    );
     return categories;
   }
 }

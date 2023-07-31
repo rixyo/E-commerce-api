@@ -29,7 +29,7 @@ export class SizeController {
     @Param('storeId') storeId: string,
     @Body() data: createSizeDto,
   ) {
-    return await this.sizeService.createSize(data.name, storeId, data.value);
+    return await this.sizeService.createSize(data, storeId);
   }
   @Roles('ADMIN')
   @Patch(':storeId/update/:id')
@@ -38,7 +38,7 @@ export class SizeController {
     @Param('storeId', ParseUUIDPipe) storeId: string,
     @Body() data: createSizeDto,
   ) {
-    return await this.sizeService.updateSize(id, data.name, data.value);
+    return await this.sizeService.updateSize(id, data);
   }
   @Roles('ADMIN')
   @Delete(':id')

@@ -40,12 +40,7 @@ export class CategoryController {
     @Param('storeId', new ParseUUIDPipe()) storeId: string,
     @Body() data: CreateCategoryDto,
   ) {
-    return await this.categoryService.createCategory(
-      data.name,
-      storeId,
-      data.billboardId,
-      data.gender,
-    );
+    return await this.categoryService.createCategory(data, storeId);
   }
   @Roles('ADMIN')
   @Patch(':storeId/update/:id')
@@ -54,7 +49,7 @@ export class CategoryController {
     @Param('storeId', new ParseUUIDPipe()) storeId: string,
     @Body() data: CreateCategoryDto,
   ) {
-    return await this.categoryService.updateCategoryById(id, data.name);
+    return await this.categoryService.updateCategoryById(id, data);
   }
   @Roles('ADMIN')
   @Delete(':id')

@@ -136,103 +136,112 @@ export class ProductService {
     return JSON.parse(productFromCache);
   }
   async createProduct(body: CreateProduct, storeId: string) {
-    const product = await this.prismaService.product.create({
-      data: {
-        name: body.name,
-        price: body.price.toFixed(2),
-        storeId: storeId,
-        categoryId: body.categoryId,
-        description: body.description,
-        isArchived: body.isArchived,
-        isFeatured: body.isFeatured,
-      },
-    });
-    const productImage = body.images.map((image) => ({
-      ...image,
-      productId: product.id,
-    }));
-    const productColor = body.colors.map((color) => ({
-      ...color,
-      productId: product.id,
-    }));
-    const productSize = body.sizes.map((size) => ({
-      ...size,
-      productId: product.id,
-    }));
-    await Promise.all([
-      this.prismaService.image.createMany({
-        data: productImage,
-      }),
-      this.prismaService.productColor.createMany({
-        data: productColor,
-      }),
-      this.prismaService.productSize.createMany({
-        data: productSize,
-      }),
-      this.redisService.setValue(`getAllProducts+${storeId}`, 'null'),
-    ]);
-    const addProduct = await this.getProductById(product.id);
-    await this.redisService.setValue(product.id, JSON.stringify(addProduct));
+    try {
+      const product = await this.prismaService.product.create({
+        data: {
+          name: body.name,
+          price: body.price.toFixed(2),
+          storeId: storeId,
+          categoryId: body.categoryId,
+          description: body.description,
+          isArchived: body.isArchived,
+          isFeatured: body.isFeatured,
+        },
+      });
+      const productImage = body.images.map((image) => ({
+        ...image,
+        productId: product.id,
+      }));
+      const productColor = body.colors.map((color) => ({
+        ...color,
+        productId: product.id,
+      }));
+      const productSize = body.sizes.map((size) => ({
+        ...size,
+        productId: product.id,
+      }));
+      await Promise.all([
+        this.prismaService.image.createMany({
+          data: productImage,
+        }),
+        this.prismaService.productColor.createMany({
+          data: productColor,
+        }),
+        this.prismaService.productSize.createMany({
+          data: productSize,
+        }),
+        this.redisService.setValue(`getAllProducts+${storeId}`, 'null'),
+      ]);
 
-    return 'Product created successfully';
+      return 'Product created successfully';
+    } catch (error) {
+      throw new Error(error);
+    }
   }
   async updateProductById(id: string, body: CreateProduct) {
-    const product = await this.prismaService.product.update({
-      where: {
-        id: id,
-      },
-      data: {
-        name: body.name,
-        price: body.price.toFixed(2),
-        categoryId: body.categoryId,
-        description: body.description,
-        isArchived: body.isArchived,
-        isFeatured: body.isFeatured,
-      },
-    });
-    const productColor = body.colors.map((color) => ({
-      ...color,
-      productId: product.id,
-    }));
-    const productSize = body.sizes.map((size) => ({
-      ...size,
-      productId: product.id,
-    }));
-    await Promise.all([
-      this.prismaService.productColor.deleteMany({
+    try {
+      const product = await this.prismaService.product.update({
         where: {
-          productId: productColor[0].productId,
+          id: id,
         },
-      }),
-      this.prismaService.productSize.deleteMany({
-        where: {
-          productId: productSize[0].productId,
+        data: {
+          name: body.name,
+          price: body.price.toFixed(2),
+          categoryId: body.categoryId,
+          description: body.description,
+          isArchived: body.isArchived,
+          isFeatured: body.isFeatured,
         },
-      }),
-      this.prismaService.productColor.createMany({
-        data: productColor,
-      }),
-      this.prismaService.productSize.createMany({
-        data: productSize,
-      }),
-      this.redisService.setValue(`getAllProducts+${product.storeId}`, 'null'),
-      this.redisService.deleteValue(product.id),
-    ]);
-    const addProduct = await this.getProductById(product.id);
-    await this.redisService.setValue(product.id, JSON.stringify(addProduct));
-    return ' Product updated successfully ';
+      });
+      const productColor = body.colors.map((color) => ({
+        ...color,
+        productId: product.id,
+      }));
+      const productSize = body.sizes.map((size) => ({
+        ...size,
+        productId: product.id,
+      }));
+      await Promise.all([
+        this.prismaService.productColor.deleteMany({
+          where: {
+            productId: productColor[0].productId,
+          },
+        }),
+        this.prismaService.productSize.deleteMany({
+          where: {
+            productId: productSize[0].productId,
+          },
+        }),
+        this.prismaService.productColor.createMany({
+          data: productColor,
+        }),
+        this.prismaService.productSize.createMany({
+          data: productSize,
+        }),
+        this.redisService.setValue(`getAllProducts+${product.storeId}`, 'null'),
+        this.redisService.deleteValue(product.id),
+        await this.redisService.setValue(product.id, 'null'),
+      ]);
+      return ' Product updated successfully ';
+    } catch (error) {
+      throw new Error(error);
+    }
   }
   async deleteProductById(id: string) {
-    const product = await this.prismaService.product.delete({
-      where: {
-        id: id,
-      },
-    });
-    await Promise.all([
-      this.redisService.deleteValue(id),
-      this.redisService.deleteValue(`getAllProducts+${product.storeId}`),
-    ]);
-    return 'Product deleted successfully';
+    try {
+      const product = await this.prismaService.product.delete({
+        where: {
+          id: id,
+        },
+      });
+      await Promise.all([
+        this.redisService.deleteValue(id),
+        this.redisService.deleteValue(`getAllProducts+${product.storeId}`),
+      ]);
+      return 'Product deleted successfully';
+    } catch (error) {
+      throw new Error(error);
+    }
   }
   async searchProduct(query: string) {
     const products = await this.prismaService.product.findMany({

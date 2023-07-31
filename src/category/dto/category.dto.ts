@@ -25,4 +25,7 @@ export class CreateCategoryDto {
   @IsNotEmpty()
   @IsString()
   gender: string;
+  @IsNotEmpty()
+  @IsString()
+  imageUrl: string;
 }

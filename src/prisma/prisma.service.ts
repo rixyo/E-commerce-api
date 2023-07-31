@@ -1,25 +1,32 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
+import { connectToDatabase } from 'src/main';
+
 @Injectable()
 export class PrismaService
   extends PrismaClient
   implements OnModuleInit, OnModuleDestroy
 {
+  private isConnecting = false;
+
   async onModuleInit() {
-    try {
-      setTimeout(async () => {
-        await this.$connect();
-      }, 5000);
-    } catch (error) {
-      console.log(error);
-    }
+    await this.connect();
   }
 
   async onModuleDestroy() {
+    await this.$disconnect();
+  }
+
+  private async connect() {
     try {
-      await this.$disconnect();
+      if (!this.isConnecting) {
+        this.isConnecting = true;
+        await connectToDatabase();
+        console.log('Connected to the database.');
+      }
     } catch (error) {
-      console.log(error);
+      this.isConnecting = false;
+      console.error('Error connecting to the database:', error.message);
     }
   }
 }

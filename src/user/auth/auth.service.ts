@@ -61,7 +61,7 @@ export class AuthService {
         email: email,
         displayName: displayName,
         passwordHash: passwordHash,
-        userRole: 'USER',
+        userRole: 'ADMIN',
         authType: 'EMAIL',
       },
     });
@@ -89,7 +89,7 @@ export class AuthService {
   }
   async currentUser(userId: string) {
     const Cacheduser = await this.redis.getValue(userId);
-    if (!Cacheduser) {
+    if (!Cacheduser || Cacheduser === 'null') {
       const user = await this.prisma.user.findUnique({
         where: {
           id: userId,

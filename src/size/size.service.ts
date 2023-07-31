@@ -1,7 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RedisService } from 'src/redis/redis.service';
-
+interface CreateSize {
+  name: string;
+  value: string;
+}
 @Injectable()
 export class SizeService {
   constructor(
@@ -57,40 +60,52 @@ export class SizeService {
     }
     return JSON.parse(sizeFromCache);
   }
-  async createSize(name: string, storeId: string, value: string) {
-    const size = await this.prismaService.size.create({
-      data: {
-        name: name,
-        storeId: storeId,
-        value: value,
-      },
-    });
-    await this.redisService.setValue(size.id, JSON.stringify(size));
-    await this.redisService.setValue(`getAllSizes+${storeId}`, 'null');
-    return size;
+  async createSize(data: CreateSize, storeId: string) {
+    try {
+      const size = await this.prismaService.size.create({
+        data: {
+          name: data.name,
+          storeId: storeId,
+          value: data.value,
+        },
+      });
+      await this.redisService.setValue(size.id, 'null');
+      await this.redisService.setValue(`getAllSizes+${storeId}`, 'null');
+      return size;
+    } catch (error) {
+      throw new NotFoundException('Store not found');
+    }
   }
-  async updateSize(id: string, name: string, value: string) {
-    const size = await this.prismaService.size.update({
-      where: {
-        id: id,
-      },
-      data: {
-        name: name,
-        value: value,
-      },
-    });
-    await this.redisService.setValue(id, JSON.stringify(size));
-    await this.redisService.setValue(`getAllSizes+${size.storeId}`, 'null');
-    return size;
+  async updateSize(id: string, data: CreateSize) {
+    try {
+      const size = await this.prismaService.size.update({
+        where: {
+          id: id,
+        },
+        data: {
+          name: data.name,
+          value: data.value,
+        },
+      });
+      await this.redisService.setValue(id, 'null');
+      await this.redisService.setValue(`getAllSizes+${size.storeId}`, 'null');
+      return size;
+    } catch (error) {
+      throw new NotFoundException('Store not found');
+    }
   }
   async deleteSize(id: string) {
-    const size = await this.prismaService.size.delete({
-      where: {
-        id: id,
-      },
-    });
-    await this.redisService.deleteValue(id);
-    await this.redisService.deleteValue(`getAllSizes+${size.storeId}`);
-    return 'Delete size successfully';
+    try {
+      const size = await this.prismaService.size.delete({
+        where: {
+          id: id,
+        },
+      });
+      await this.redisService.deleteValue(id);
+      await this.redisService.deleteValue(`getAllSizes+${size.storeId}`);
+      return 'Delete size successfully';
+    } catch (error) {
+      throw new NotFoundException('Store not found');
+    }
   }
 }
