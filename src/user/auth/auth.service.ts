@@ -88,8 +88,9 @@ export class AuthService {
     return bcrypt.compare(password, passwordHash);
   }
   async currentUser(userId: string) {
-    const Cacheduser = await this.redis.getValue(userId);
-    if (!Cacheduser || Cacheduser === 'null') {
+    const Cacheduser = await this.redis.getValueFromHash(userId, 'user');
+    if (Cacheduser) return Cacheduser;
+    else {
       const user = await this.prisma.user.findUnique({
         where: {
           id: userId,
@@ -103,10 +104,9 @@ export class AuthService {
         },
       });
       if (!user) throw new NotFoundException('User not found');
-      await this.redis.setValue(userId, JSON.stringify(user));
+      await this.redis.setValueToHash(userId, 'user', JSON.stringify(user));
       return user;
     }
-    return JSON.parse(Cacheduser);
   }
   async updateUserInfo(data: UpdateUserDTO, userId: string) {
     const user = await this.prisma.user.update({
@@ -119,11 +119,7 @@ export class AuthService {
         avatarUrl: data.avaterUrl,
       },
     });
-    Promise.all([
-      this.redis.deleteValue(userId),
-      this.currentUser(userId),
-      this.redis.setValue(userId, JSON.stringify(user)),
-    ]);
+    Promise.all([this.redis.deleteValue(user.email)]);
     return 'Information updated successfully';
   }
 }

@@ -8,14 +8,14 @@ interface CreateSize {
 @Injectable()
 export class SizeService {
   constructor(
-    private readonly prismaService: PrismaService,
-    private readonly redisService: RedisService,
+    private readonly prismaService: PrismaService, // inject prisma service or create instance of prisma service
+    private readonly redisService: RedisService, // inject redis service or create instance of redis service
   ) {}
   async getAllSizes(storeId: string) {
-    const sizesFromCache = await this.redisService.getValue(
-      `getAllSizes+${storeId}`,
-    );
-    if (!sizesFromCache || sizesFromCache === 'null') {
+    // get sizes from redisCache
+    const sizesFromRedis = await this.redisService.getValueFromList('sizes');
+    if (sizesFromRedis && sizesFromRedis.length !== 0) return sizesFromRedis;
+    else {
       const sizes = await this.prismaService.size.findMany({
         where: {
           storeId: storeId,
@@ -32,17 +32,16 @@ export class SizeService {
         },
       });
       if (!sizes) throw new NotFoundException('Sizes not found');
-      await this.redisService.setValue(
-        `getAllSizes+${storeId}`,
-        JSON.stringify(sizes),
-      );
+      // set sizes to redisCache
+      await this.redisService.setValueToList('sizes', JSON.stringify(sizes));
       return sizes;
     }
-    return JSON.parse(sizesFromCache);
   }
   async getSizeById(id: string) {
-    const sizeFromCache = await this.redisService.getValue(id);
-    if (sizeFromCache === 'null' || !sizeFromCache) {
+    // get size from redisCache
+    const sizeFromRedis = await this.redisService.getValueFromHash(id, 'size');
+    if (sizeFromRedis) return sizeFromRedis;
+    else {
       const size = await this.prismaService.size.findUnique({
         where: {
           id: id,
@@ -55,30 +54,29 @@ export class SizeService {
         },
       });
       if (!size) throw new NotFoundException('Size not found');
-      await this.redisService.setValue(id, JSON.stringify(size));
+      // set size to redisCache
+      await this.redisService.setValueToHash(id, 'size', JSON.stringify(size));
       return size;
     }
-    return JSON.parse(sizeFromCache);
   }
   async createSize(data: CreateSize, storeId: string) {
     try {
-      const size = await this.prismaService.size.create({
+      await this.prismaService.size.create({
         data: {
           name: data.name,
           storeId: storeId,
           value: data.value,
         },
       });
-      await this.redisService.setValue(size.id, 'null');
-      await this.redisService.setValue(`getAllSizes+${storeId}`, 'null');
-      return size;
+      await this.redisService.deleteValue('sizes');
+      return 'Create size successfully';
     } catch (error) {
-      throw new NotFoundException('Store not found');
+      return 'Size creation failed';
     }
   }
   async updateSize(id: string, data: CreateSize) {
     try {
-      const size = await this.prismaService.size.update({
+      await this.prismaService.size.update({
         where: {
           id: id,
         },
@@ -87,25 +85,29 @@ export class SizeService {
           value: data.value,
         },
       });
-      await this.redisService.setValue(id, 'null');
-      await this.redisService.setValue(`getAllSizes+${size.storeId}`, 'null');
-      return size;
+      Promise.all([
+        this.redisService.deleteValue('sizes'),
+        this.redisService.deleteValue(id),
+      ]);
+      return 'Update size successfully';
     } catch (error) {
-      throw new NotFoundException('Store not found');
+      return 'Store not found';
     }
   }
   async deleteSize(id: string) {
     try {
-      const size = await this.prismaService.size.delete({
+      await this.prismaService.size.delete({
         where: {
           id: id,
         },
       });
-      await this.redisService.deleteValue(id);
-      await this.redisService.deleteValue(`getAllSizes+${size.storeId}`);
+      Promise.all([
+        this.redisService.deleteValue('sizes'),
+        this.redisService.deleteValue(id),
+      ]);
       return 'Delete size successfully';
     } catch (error) {
-      throw new NotFoundException('Store not found');
+      return 'Store not found';
     }
   }
 }

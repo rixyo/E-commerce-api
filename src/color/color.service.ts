@@ -1,18 +1,22 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RedisService } from 'src/redis/redis.service';
-
+// create interface for create color
+interface CreateColor {
+  name: string;
+  value: string;
+}
 @Injectable()
 export class ColorService {
   constructor(
-    private readonly prismaService: PrismaService,
-    private readonly redisService: RedisService,
+    private readonly prismaService: PrismaService, // inject prisma service or create instance of prisma service
+    private readonly redisService: RedisService, // inject redis service or create instance of redis service
   ) {}
   async getAllColors(storeId: string) {
-    const colorsFromCache = await this.redisService.getValue(
-      `getAllColors+${storeId}`,
-    );
-    if (colorsFromCache === 'null' || !colorsFromCache) {
+    // get colors from redisCache
+    const colorsFromRedis = await this.redisService.getValueFromList('colors');
+    if (colorsFromRedis && colorsFromRedis.length !== 0) return colorsFromRedis;
+    else {
       const colors = await this.prismaService.color.findMany({
         where: {
           storeId: storeId,
@@ -29,17 +33,20 @@ export class ColorService {
         },
       });
       if (!colors) throw new NotFoundException('Colors not found');
-      await this.redisService.setValue(
-        `getAllColors+${storeId}`,
-        JSON.stringify(colors),
-      );
+      // set colors to redisCache
+      await this.redisService.setValueToList('colors', JSON.stringify(colors));
+
       return colors;
     }
-    return JSON.parse(colorsFromCache);
   }
   async getColorById(id: string) {
-    const colorFromCache = await this.redisService.getValue(id);
-    if (colorFromCache === 'null' || !colorFromCache) {
+    // get color from redisCache
+    const colorFromRedis = await this.redisService.getValueFromHash(
+      'color',
+      id,
+    );
+    if (colorFromRedis) return colorFromRedis;
+    else {
       const color = await this.prismaService.color.findUnique({
         where: {
           id: id,
@@ -52,62 +59,77 @@ export class ColorService {
         },
       });
       if (!color) throw new NotFoundException('Color not found');
-      await this.redisService.setValue(id, JSON.stringify(color));
+      // set color to redisCache
+      await this.redisService.setValueToHash(
+        id,
+        'color',
+        JSON.stringify(color),
+      );
+
       return color;
     }
-    return JSON.parse(colorFromCache);
   }
-  async createColor(name: string, storeId: string, value: string) {
-    const color = await this.prismaService.color.create({
-      data: {
-        name: name,
-        storeId: storeId,
-        value: value,
-      },
-      select: {
-        id: true,
-        name: true,
-        storeId: true,
-        value: true,
-      },
-    });
-    await Promise.all([
-      this.redisService.setValue(color.id, JSON.stringify(color)),
-      this.redisService.setValue(`getAllColors+${storeId}`, 'null'),
-    ]);
-    return color;
+  async createColor(data: CreateColor, storeId: string) {
+    try {
+      await this.prismaService.color.create({
+        data: {
+          name: data.name,
+          storeId: storeId,
+          value: data.value,
+        },
+        select: {
+          id: true,
+          name: true,
+          storeId: true,
+          value: true,
+        },
+      });
+      await this.redisService.deleteValue('colors');
+      return 'Create color successfully';
+    } catch (error) {
+      throw new Error("Can't create color");
+    }
   }
-  async updateColor(id: string, name: string, value: string) {
-    const color = await this.prismaService.color.update({
-      where: {
-        id: id,
-      },
-      data: {
-        name: name,
-        value: value,
-      },
-      select: {
-        id: true,
-        storeId: true,
-        name: true,
-        value: true,
-      },
-    });
-    await Promise.all([
-      this.redisService.setValue(id, JSON.stringify(color)),
-      this.redisService.setValue(`getAllColors+${color.storeId}`, 'null'),
-    ]);
+  async updateColor(id: string, data: CreateColor) {
+    try {
+      await this.prismaService.color.update({
+        where: {
+          id: id,
+        },
+        data: {
+          name: data.name,
+          value: data.value,
+        },
+        select: {
+          id: true,
+          storeId: true,
+          name: true,
+          value: true,
+        },
+      });
+      Promise.all([
+        this.redisService.deleteValue(id),
+        this.redisService.deleteValue('colors'),
+      ]);
+      return 'Update color successfully';
+    } catch (error) {
+      throw new Error("Can't update color");
+    }
   }
   async deleteColor(id: string) {
-    const color = await this.prismaService.color.delete({
-      where: {
-        id: id,
-      },
-    });
-    await Promise.all([
-      this.redisService.deleteValue(id),
-      this.redisService.deleteValue(`getAllColors+${color.storeId}`),
-    ]);
-    return 'Delete color successfully';
+    try {
+      await this.prismaService.color.delete({
+        where: {
+          id: id,
+        },
+      });
+      await Promise.all([
+        this.redisService.deleteValue(id),
+        this.redisService.deleteValue('colors'),
+      ]);
+      return 'Delete color successfully';
+    } catch (error) {
+      throw new Error("Can't delete color");
+    }
   }
 }

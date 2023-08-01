@@ -29,16 +29,15 @@ export class ColorController {
     @Param('storeId', new ParseUUIDPipe()) storeId: string,
     @Body() data: createColorDto,
   ) {
-    return await this.colorService.createColor(data.name, storeId, data.value);
+    return await this.colorService.createColor(data, storeId);
   }
   @Roles('ADMIN')
   @Patch(':storeId/update/:id')
   async updateColorById(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @Param('storeId', new ParseUUIDPipe()) storeId: string,
     @Body() data: createColorDto,
   ) {
-    return await this.colorService.updateColor(id, data.name, data.value);
+    return await this.colorService.updateColor(id, data);
   }
   @Roles('ADMIN')
   @Delete(':id')

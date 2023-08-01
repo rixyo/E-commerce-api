@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RedisService } from 'src/redis/redis.service';
-
+// create interface for create product
 interface CreateProduct {
   name: string;
   price: number;
@@ -13,6 +13,7 @@ interface CreateProduct {
   isFeatured: boolean;
   isArchived: boolean;
 }
+/// create interface for filters
 interface Filters {
   price?: {
     gte?: number;
@@ -32,14 +33,17 @@ interface Filters {
 @Injectable()
 export class ProductService {
   constructor(
-    private readonly prismaService: PrismaService,
-    private readonly redisService: RedisService,
+    private readonly prismaService: PrismaService, // inject prisma service or create instance of prisma service
+    private readonly redisService: RedisService, // inject redis service or create instance of redis service
   ) {}
   async getAllProducts(storeId: string) {
-    const productsFromCache = await this.redisService.getValue(
-      `getAllProducts+${storeId}`,
+    // get products from redisCache
+    const productsFromRedis = await this.redisService.getValueFromList(
+      'admin-products',
     );
-    if (!productsFromCache || productsFromCache === 'null') {
+    if (productsFromRedis && productsFromRedis.length !== 0)
+      return productsFromRedis;
+    else {
       const products = await this.prismaService.product.findMany({
         where: {
           storeId: storeId,
@@ -81,17 +85,23 @@ export class ProductService {
         },
       });
       if (!products) throw new NotFoundException('Products not found');
-      await this.redisService.setValue(
-        `getAllProducts+${storeId}`,
+      // set products to redisCache
+      await this.redisService.setValueToList(
+        'admin-products',
         JSON.stringify(products),
       );
+
       return products;
     }
-    return JSON.parse(productsFromCache);
   }
   async getProductById(id: string) {
-    const productFromCache = await this.redisService.getValue(id);
-    if (!productFromCache || productFromCache === 'null') {
+    // get product from redisCache
+    const productFromRedis = await this.redisService.getValueFromHash(
+      id,
+      'product',
+    );
+    if (productFromRedis) return productFromRedis;
+    else {
       const product = await this.prismaService.product.findUnique({
         where: {
           id: id,
@@ -130,10 +140,14 @@ export class ProductService {
         },
       });
       if (!product) throw new NotFoundException('Product not found');
-      await this.redisService.setValue(id, JSON.stringify(product));
+      // set product to redisCache
+      await this.redisService.setValueToHash(
+        id,
+        'product',
+        JSON.stringify(product),
+      );
       return product;
     }
-    return JSON.parse(productFromCache);
   }
   async createProduct(body: CreateProduct, storeId: string) {
     try {
@@ -170,7 +184,7 @@ export class ProductService {
         this.prismaService.productSize.createMany({
           data: productSize,
         }),
-        this.redisService.setValue(`getAllProducts+${storeId}`, 'null'),
+        this.redisService.deleteValue('admin-products'),
       ]);
 
       return 'Product created successfully';
@@ -218,9 +232,8 @@ export class ProductService {
         this.prismaService.productSize.createMany({
           data: productSize,
         }),
-        this.redisService.setValue(`getAllProducts+${product.storeId}`, 'null'),
-        this.redisService.deleteValue(product.id),
-        await this.redisService.setValue(product.id, 'null'),
+        this.redisService.deleteValue(id),
+        this.redisService.deleteValue('admin-products'),
       ]);
       return ' Product updated successfully ';
     } catch (error) {
@@ -229,14 +242,14 @@ export class ProductService {
   }
   async deleteProductById(id: string) {
     try {
-      const product = await this.prismaService.product.delete({
+      await this.prismaService.product.delete({
         where: {
           id: id,
         },
       });
       await Promise.all([
         this.redisService.deleteValue(id),
-        this.redisService.deleteValue(`getAllProducts+${product.storeId}`),
+        this.redisService.deleteValue('admin-products'),
       ]);
       return 'Product deleted successfully';
     } catch (error) {
@@ -353,7 +366,6 @@ export class ProductService {
       });
       return products;
     } catch (error) {
-      console.log(error);
       return "Can't filter products";
     }
   }

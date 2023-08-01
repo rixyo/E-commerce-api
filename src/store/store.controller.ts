@@ -46,10 +46,7 @@ export class StoreController {
   }
   @Roles('ADMIN')
   @Delete(':id')
-  async deleteStore(
-    @Param('id', ParseUUIDPipe) id: string,
-    @User() user: userType,
-  ) {
-    return await this.storeService.deleteStore(id, user.userId);
+  async deleteStore(@Param('id', ParseUUIDPipe) id: string) {
+    return await this.storeService.deleteStore(id);
   }
 }

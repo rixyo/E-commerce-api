@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { RedisService } from 'src/redis/redis.service';
-
+import { PrismaService } from 'src/prisma/prisma.service'; // import prisma service
+import { RedisService } from 'src/redis/redis.service'; // import redis service
+// create interface for create store
 interface CreateStore {
   name: string;
 }
@@ -9,9 +9,10 @@ interface CreateStore {
 @Injectable()
 export class StoreService {
   constructor(
-    private readonly Prisma: PrismaService,
-    private readonly redis: RedisService,
+    private readonly Prisma: PrismaService, // inject prisma service or create instance of prisma service
+    private readonly redis: RedisService, // inject redis service or create instance of redis service
   ) {}
+  // create store
   async createStore(data: CreateStore, userId: string) {
     try {
       const store = await this.Prisma.store.create({
@@ -20,16 +21,20 @@ export class StoreService {
           userId: userId,
         },
       });
-      await this.redis.setValue(`getAllStore+${userId}`, 'null');
-      await this.redis.setValue(`findByUserId+${userId}`, 'null');
+      Promise.all([
+        this.redis.deleteValue('userFirstStore'),
+        this.redis.deleteValue('stores'),
+      ]);
       return store;
     } catch (error) {
-      throw new NotFoundException(error.message);
+      return 'Something went wrong';
     }
   }
   async getStoreById(id: string) {
-    const storeFromCache = await this.redis.getValue(id);
-    if (!storeFromCache || storeFromCache === 'null') {
+    // get store from redisCache
+    const storeFromRedis = await this.redis.getValueFromHash(id, 'store');
+    if (storeFromRedis) return storeFromRedis;
+    else {
       const store = await this.Prisma.store.findFirst({
         where: {
           id: id,
@@ -41,36 +46,43 @@ export class StoreService {
         },
       });
       if (!store) throw new NotFoundException('Store not found');
-      await this.redis.setValue(id, JSON.stringify(store));
+      // set store to redisCache
+      await this.redis.setValueToHash(id, 'store', JSON.stringify(store));
       return store;
     }
-    return JSON.parse(storeFromCache);
   }
   async getStoreByUserId(userId: string) {
-    const storeFromCache = await this.redis.getValue(`findByUserId+${userId}`);
-    if (!storeFromCache || storeFromCache === 'null') {
-      const store = await this.Prisma.store.findFirst({
-        where: {
-          userId: userId,
-        },
-        select: {
-          id: true,
-          userId: true,
-          name: true,
-        },
-      });
-      if (!store) throw new NotFoundException('Store not found');
-      await this.redis.setValue(
-        `findByUserId+${userId}`,
-        JSON.stringify(store),
-      );
-      return store;
-    }
-    return JSON.parse(storeFromCache);
+    // get store from redisCache
+    const storeFromRedis = await this.redis.getValueFromHash(
+      'userFirstStore',
+      'userStore',
+    );
+    if (storeFromRedis) return storeFromRedis;
+    const store = await this.Prisma.store.findFirst({
+      where: {
+        userId: userId,
+      },
+      select: {
+        id: true,
+        userId: true,
+        name: true,
+      },
+    });
+    if (!store) throw new NotFoundException('Store not found');
+    // set store to redisCache
+    await this.redis.setValueToHash(
+      'userFirstStore',
+      'userStore',
+      JSON.stringify(store),
+    );
+    return store;
   }
+
   async getAllStore(userId: string) {
-    const storeFromCache = await this.redis.getValue(`getAllStore+${userId}`);
-    if (storeFromCache === 'null' || !storeFromCache) {
+    // get stores from redisCache
+    const storesFromRedis = await this.redis.getValueFromList('stores');
+    if (storesFromRedis && storesFromRedis.length !== 0) return storesFromRedis;
+    else {
       const store = await this.Prisma.store.findMany({
         where: {
           userId: userId,
@@ -82,14 +94,15 @@ export class StoreService {
         },
       });
       if (!store) throw new NotFoundException('Store not found');
-      await this.redis.setValue(`getAllStore+${userId}`, JSON.stringify(store));
+      // set stores to redisCache
+      await this.redis.setValueToList('stores', JSON.stringify(store));
       return store;
     }
-    return JSON.parse(storeFromCache);
   }
+
   async updateStore(id: string, data: CreateStore) {
     try {
-      const store = await this.Prisma.store.update({
+      await this.Prisma.store.update({
         where: {
           id: id,
         },
@@ -97,24 +110,29 @@ export class StoreService {
           name: data.name,
         },
       });
-      await this.redis.setValue(id, 'null');
-      await this.redis.setValue(`findByUserId+${store.userId}`, 'null');
-      await this.redis.setValue(`getAllStore+${store.userId}`, 'null');
-      return store;
+      // delete store from redisCache
+      Promise.all([
+        this.redis.deleteValue(id),
+        this.redis.deleteValue('userFirstStore'),
+        this.redis.deleteValue('stores'),
+      ]);
+      return 'Updated successfully';
     } catch (error) {
-      throw new NotFoundException(error.message);
+      return "Can't update store";
     }
   }
-  async deleteStore(id: string, userId: string) {
+  async deleteStore(id: string) {
     try {
       await this.Prisma.store.delete({
         where: {
           id: id,
         },
       });
-      await this.redis.deleteValue(id);
-      await this.redis.deleteValue(`findByUserId+${userId}`);
-      await this.redis.deleteValue(`getAllStore+${userId}`);
+      // delete store from redisCache
+      Promise.all([
+        this.redis.deleteValue(id),
+        this.redis.deleteValue('stores'),
+      ]);
       return 'Deleted successfully';
     } catch (error) {
       throw new NotFoundException(error.message);

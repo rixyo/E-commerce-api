@@ -14,14 +14,17 @@ interface CreateCategory {
 @Injectable()
 export class CategoryService {
   constructor(
-    private readonly prismaService: PrismaService,
-    private readonly redisService: RedisService,
+    private readonly prismaService: PrismaService, // inject prisma service or create instance of prisma service
+    private readonly redisService: RedisService, // inject redis service or create instance of redis service
   ) {}
   async getAllCategories(storeId: string) {
-    const categoriesFromCache = await this.redisService.getValue(
-      `getAllCategories+${storeId}`,
+    // get categories from redisCache
+    const categoriesFromRedis = await this.redisService.getValueFromList(
+      'admincategories',
     );
-    if (!categoriesFromCache || categoriesFromCache === 'null') {
+    if (categoriesFromRedis && categoriesFromRedis.length !== 0)
+      return categoriesFromRedis;
+    else {
       const categories = await this.prismaService.category.findMany({
         where: {
           storeId: storeId,
@@ -45,17 +48,22 @@ export class CategoryService {
         },
       });
       if (!categories) throw new NotFoundException('Categories not found');
-      await this.redisService.setValue(
-        `getAllCategories+${storeId}`,
+      // set categories to redisCache
+      await this.redisService.setValueToList(
+        'admincategories',
         JSON.stringify(categories),
       );
       return categories;
     }
-    return JSON.parse(categoriesFromCache);
   }
   async getCategoryById(id: string) {
-    const categoryFromCache = await this.redisService.getValue(id);
-    if (!categoryFromCache || categoryFromCache === 'null') {
+    // get category from redisCache
+    const categoryFromRedis = await this.redisService.getValueFromHash(
+      id,
+      'category',
+    );
+    if (categoryFromRedis) return categoryFromRedis;
+    else {
       const category = await this.prismaService.category.findUnique({
         where: {
           id: id,
@@ -76,14 +84,18 @@ export class CategoryService {
         },
       });
       if (!category) throw new NotFoundException('Category not found');
-      await this.redisService.setValue(id, JSON.stringify(category));
+      // set category to redisCache
+      await this.redisService.setValueToHash(
+        id,
+        'category',
+        JSON.stringify(category),
+      );
       return category;
     }
-    return JSON.parse(categoryFromCache);
   }
   async createCategory(data: CreateCategory, storeId: string) {
     try {
-      const category = await this.prismaService.category.create({
+      await this.prismaService.category.create({
         data: {
           name: data.name,
           storeId: storeId,
@@ -92,18 +104,15 @@ export class CategoryService {
           imageUrl: data.imageUrl,
         },
       });
-      await Promise.all([
-        this.redisService.setValue(category.id, 'null'),
-        this.redisService.setValue(`getAllCategories+${storeId}`, 'null'),
-      ]);
-      return category;
+      await this.redisService.deleteValue('admincategories');
+      return 'Category created';
     } catch (error) {
-      throw new NotFoundException(error.message);
+      throw new Error('Category not created');
     }
   }
   async updateCategoryById(id: string, data: CreateCategory) {
     try {
-      const category = await this.prismaService.category.update({
+      await this.prismaService.category.update({
         where: {
           id: id,
         },
@@ -113,34 +122,29 @@ export class CategoryService {
           imageUrl: data.imageUrl,
         },
       });
-      await Promise.all([
-        this.redisService.setValue(
-          `getAllCategories+${category.storeId}`,
-          'null',
-        ),
-        this.redisService.setValue(id, 'null'),
+      Promise.all([
+        this.redisService.deleteValue('admincategories'),
+        this.redisService.deleteValue(id),
       ]);
-      return category;
+      return 'Category updated';
     } catch (error) {
-      throw new NotFoundException(error.message);
+      throw new Error('Category not updated');
     }
   }
   async deleteCategoryById(id: string) {
     try {
-      const category = await this.prismaService.category.delete({
+      await this.prismaService.category.delete({
         where: {
           id: id,
         },
       });
-      await Promise.all([
-        await this.redisService.deleteValue(id),
-        await this.redisService.deleteValue(
-          `getAllCategories+${category.storeId}`,
-        ),
+      Promise.all([
+        this.redisService.deleteValue('admincategories'),
+        this.redisService.deleteValue(id),
       ]);
       return 'Category deleted';
     } catch (error) {
-      throw new NotFoundException(error.message);
+      throw new Error('Category not deleted');
     }
   }
   async getCategories(filerts: Filers) {
@@ -165,6 +169,7 @@ export class CategoryService {
       },
     });
     if (!categories) throw new NotFoundException('Categories not found');
+
     return categories;
   }
 }

@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RedisService } from 'src/redis/redis.service';
+// create interface for create billboard
 interface CreateBillboard {
   label: string;
   imageUrl: string;
@@ -8,55 +9,58 @@ interface CreateBillboard {
 @Injectable()
 export class BillboardService {
   constructor(
-    private readonly prismaService: PrismaService,
-    private readonly redisService: RedisService,
+    private readonly prismaService: PrismaService, // inject prisma service or create instance of prisma service
+    private readonly redisService: RedisService, // inject redis service or create instance of redis service
   ) {}
   async createBillboard(data: CreateBillboard, storeId: string) {
     try {
-      const billboard = await this.prismaService.billboard.create({
+      await this.prismaService.billboard.create({
         data: {
           label: data.label,
           imageUrl: data.imageUrl,
           storeId: storeId,
         },
       });
-      await this.redisService.setValue(billboard.id, 'null');
-      await this.redisService.setValue('getBillboards', 'null');
-      await this.redisService.setValue(
-        `getAllBillboard+${billboard.storeId}`,
-        'null',
-      );
-      return billboard;
+      Promise.all([
+        this.redisService.deleteValue('billboards'),
+        this.redisService.deleteValue('usersbillboard'),
+      ]);
+      return 'Billboard created successfully';
     } catch (error) {
-      throw new NotFoundException(error.message);
+      return 'Something went wrong';
     }
   }
   async getBillboardById(id: string) {
-    try {
-      const cachedBillboard = await this.redisService.getValue(id);
-      if (!cachedBillboard || cachedBillboard === 'null') {
-        const billboard = await this.prismaService.billboard.findUnique({
-          where: {
-            id: id,
-          },
-          select: {
-            id: true,
-            label: true,
-            imageUrl: true,
-          },
-        });
-        if (!billboard) throw new NotFoundException('Billboard not found');
-        await this.redisService.setValue(id, JSON.stringify(billboard));
-        return billboard;
-      }
-      return JSON.parse(cachedBillboard);
-    } catch (error) {
-      throw new NotFoundException(error.message);
+    // get billboard from redisCache
+    const billboardFromRedis = await this.redisService.getValueFromHash(
+      id,
+      'billboard',
+    );
+    if (billboardFromRedis) return billboardFromRedis;
+    else {
+      const billboard = await this.prismaService.billboard.findUnique({
+        where: {
+          id: id,
+        },
+        select: {
+          id: true,
+          label: true,
+          imageUrl: true,
+        },
+      });
+      if (!billboard) throw new NotFoundException('Billboard not found');
+      // set billboard to redisCache
+      await this.redisService.setValueToHash(
+        id,
+        'billboard',
+        JSON.stringify(billboard),
+      );
+      return billboard;
     }
   }
   async updateBillboardById(id: string, data: CreateBillboard) {
     try {
-      const billboard = await this.prismaService.billboard.update({
+      await this.prismaService.billboard.update({
         where: {
           id: id,
         },
@@ -65,79 +69,79 @@ export class BillboardService {
           imageUrl: data.imageUrl,
         },
       });
-      await Promise.all([
-        this.redisService.setValue(id, 'null'),
-        this.redisService.setValue(
-          `getAllBillboard+${billboard.storeId}`,
-          'null',
-        ),
-        this.redisService.setValue('getBillboards', 'null'),
+      Promise.all([
+        this.redisService.deleteValue(id),
+        this.redisService.deleteValue('billboards'),
+        this.redisService.deleteValue('usersbillboard'),
       ]);
-      await this.redisService.setValue(id, JSON.stringify(billboard));
-      return billboard;
+      return 'updated successfully';
     } catch (error) {
-      throw new NotFoundException(error.message);
+      throw new Error("Can't update billboard");
     }
   }
   async deleteBillboardById(id: string) {
     try {
-      const billboard = await this.prismaService.billboard.delete({
+      await this.prismaService.billboard.delete({
         where: {
           id: id,
         },
       });
-      await Promise.all([
-        this.redisService.deleteValue('getBillboards'),
+      Promise.all([
         this.redisService.deleteValue(id),
-        this.redisService.deleteValue(`getAllBillboard+${billboard.storeId}`),
+        this.redisService.deleteValue('billboards'),
+        this.redisService.deleteValue('usersbillboard'),
       ]);
       return 'deleted successfully';
     } catch (error) {
-      throw new NotFoundException(error.message);
+      throw new Error("Can't delete billboard");
     }
   }
   async getAllBillboard(storeId: string) {
-    try {
-      const cachedBillboards = await this.redisService.getValue(
-        `getAllBillboard+${storeId}`,
-      );
-      if (cachedBillboards === 'null' || !cachedBillboards) {
-        const billboards = await this.prismaService.billboard.findMany({
-          where: {
-            storeId: storeId,
-          },
-          select: {
-            id: true,
-            label: true,
-            imageUrl: true,
-            createdAt: true,
-          },
-          orderBy: {
-            createdAt: 'desc',
-          },
-        });
-        if (!billboards || billboards.length === 0) {
-          throw new NotFoundException('Billboards not found');
-        }
-        await this.redisService.setValue(
-          `getAllBillboard+${storeId}`,
-          JSON.stringify(billboards),
-        );
-        return billboards;
-      }
-      return JSON.parse(cachedBillboards);
-    } catch (error) {
-      throw new NotFoundException(error.message);
+    // get billboards from redisCache
+    const billboardsFromRedis = await this.redisService.getValueFromList(
+      ' billboards ',
+    );
+    if (billboardsFromRedis && billboardsFromRedis.length !== 0)
+      return billboardsFromRedis;
+    const billboards = await this.prismaService.billboard.findMany({
+      where: {
+        storeId: storeId,
+      },
+      select: {
+        id: true,
+        label: true,
+        imageUrl: true,
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+    if (!billboards || billboards.length === 0) {
+      throw new NotFoundException('Billboards not found');
     }
+    // set billboards to redisCache
+    await this.redisService.setValueToList(
+      'billboards',
+      JSON.stringify(billboards),
+    );
+
+    return billboards;
   }
   async getBillboards() {
-    const cachedBillboards = await this.redisService.getValue('getBillboards');
-    if (cachedBillboards === 'null' || !cachedBillboards) {
+    // get billboards from redisCache
+    const billboardsFromRedis = await this.redisService.getValueFromList(
+      'usersbillboard',
+    );
+    if (billboardsFromRedis && billboardsFromRedis.length !== 0)
+      return billboardsFromRedis;
+    else {
       const billboards = await this.prismaService.billboard.findMany({
         select: {
           id: true,
           label: true,
           imageUrl: true,
+          createdAt: true,
         },
         orderBy: {
           createdAt: 'desc',
@@ -146,12 +150,13 @@ export class BillboardService {
       if (!billboards || billboards.length === 0) {
         throw new NotFoundException('Billboards not found');
       }
-      await this.redisService.setValue(
-        'getBillboards',
+      // set billboards to redisCache
+      await this.redisService.setValueToList(
+        'usersbillboard',
         JSON.stringify(billboards),
       );
+
       return billboards;
     }
-    return JSON.parse(cachedBillboards);
   }
 }
