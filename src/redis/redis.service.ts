@@ -14,9 +14,8 @@ export class RedisService {
     await this.redisClient.del(key);
   }
   async setValueToHash(key: string, hash: string, value: string) {
-    if (value) {
-      await this.redisClient.hset(key, hash, value, 'EX', 60 * 60 * 24 * 1);
-    }
+    await this.redisClient.hset(key, hash, value);
+    this.redisClient.expire(key, 60 * 60 * 24 * 1);
   }
   async getValueFromHash(key: string, hash: string) {
     const serializedValue = await this.redisClient.hget(key, hash);
@@ -27,16 +26,11 @@ export class RedisService {
     }
   }
   async setValueToList(key: string, value: string) {
-    if (value) {
-      await this.redisClient.rpush(key, value, 'EX', 60 * 60 * 24 * 1);
-    }
+    await this.redisClient.rpush(key, value);
+    this.redisClient.expire(key, 60 * 60 * 24 * 1);
   }
   async getValueFromList(key: string) {
     const serializedValue = await this.redisClient.lrange(key, 0, -1);
-    if (serializedValue) {
-      return serializedValue[0];
-    } else {
-      return null;
-    }
+    return serializedValue[0];
   }
 }

@@ -38,6 +38,7 @@ export class CategoryService {
           billboard: {
             select: {
               id: true,
+              imageUrl: true,
               label: true,
             },
           },
@@ -78,9 +79,9 @@ export class CategoryService {
             select: {
               id: true,
               label: true,
+              imageUrl: true,
             },
           },
-          createdAt: true,
         },
       });
       if (!category) throw new NotFoundException('Category not found');
@@ -105,6 +106,7 @@ export class CategoryService {
         },
       });
       await this.redisService.deleteValue('admincategories');
+      await this.redisService.deleteValue('usercategories');
       return 'Category created';
     } catch (error) {
       throw new Error('Category not created');
@@ -169,7 +171,6 @@ export class CategoryService {
       },
     });
     if (!categories) throw new NotFoundException('Categories not found');
-
     return categories;
   }
 }

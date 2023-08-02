@@ -61,7 +61,6 @@ export class AuthService {
         email: email,
         displayName: displayName,
         passwordHash: passwordHash,
-        userRole: 'ADMIN',
         authType: 'EMAIL',
       },
     });
@@ -109,7 +108,7 @@ export class AuthService {
     }
   }
   async updateUserInfo(data: UpdateUserDTO, userId: string) {
-    const user = await this.prisma.user.update({
+    await this.prisma.user.update({
       where: {
         id: userId,
       },
@@ -119,7 +118,7 @@ export class AuthService {
         avatarUrl: data.avaterUrl,
       },
     });
-    Promise.all([this.redis.deleteValue(user.email)]);
+    Promise.all([this.redis.deleteValue(userId)]);
     return 'Information updated successfully';
   }
 }
