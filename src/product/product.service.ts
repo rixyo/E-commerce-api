@@ -22,12 +22,6 @@ interface Filters {
   category?: {
     name: string;
   };
-  sizes?: {
-    value: string;
-  };
-  colors?: {
-    value: string;
-  };
   isFeatured?: boolean;
 }
 @Injectable()
@@ -256,7 +250,9 @@ export class ProductService {
       throw new Error(error);
     }
   }
-  async searchProduct(query: string) {
+  async searchProduct(query: string, page: number, limit: number) {
+    const skip = (page - 1) * limit;
+    const take = parseInt(`${limit}`);
     const products = await this.prismaService.product.findMany({
       where: {
         OR: [
@@ -310,6 +306,8 @@ export class ProductService {
           },
         },
       },
+      skip,
+      take,
     });
     if (!products) return 'No products found';
     return products;
@@ -366,7 +364,7 @@ export class ProductService {
       });
       return products;
     } catch (error) {
-      return "Can't filter products";
+      console.log(error);
     }
   }
 }

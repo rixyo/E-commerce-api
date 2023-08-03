@@ -17,9 +17,12 @@ import { createProductDto } from './dto/product.dto';
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
   @Get('result')
-  async searchProduct(@Query('search_query') search_query: string) {
+  async searchProduct(
+    @Query('search_query') search_query: string,
+    @Query('page') page: number,
+  ) {
     if (!search_query || search_query === '') return [];
-    return await this.productService.searchProduct(search_query);
+    return await this.productService.searchProduct(search_query, page, 10);
   }
   @Get('')
   async filterProducts(
@@ -27,8 +30,6 @@ export class ProductController {
     @Query('category') category?: { name: string },
     @Query('minPrice') minPrice?: string,
     @Query('maxPrice') maxPrice?: string,
-    @Query('sizes') sizes?: { value: string },
-    @Query('colors') colors?: { value: string },
     @Query('isFeatured') isFeatured?: boolean,
   ) {
     const price =
@@ -41,8 +42,6 @@ export class ProductController {
     const filters = {
       ...(category && { category }),
       ...(price && { price }),
-      ...(sizes && { sizes }),
-      ...(colors && { colors }),
       ...(isFeatured && { isFeatured }),
     };
     return await this.productService.filterProduct(filters, page, 10);

@@ -45,4 +45,8 @@ export class SizeController {
   async deleteSizeById(@Param('id', ParseUUIDPipe) id: string) {
     return await this.sizeService.deleteSize(id);
   }
+  @Get('')
+  async getSizes() {
+    return await this.sizeService.getAllSizesClient();
+  }
 }

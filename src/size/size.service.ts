@@ -68,7 +68,10 @@ export class SizeService {
           value: data.value,
         },
       });
-      await this.redisService.deleteValue('sizes');
+      Promise.all([
+        this.redisService.deleteValue('sizes'),
+        this.redisService.deleteValue('usersizes'),
+      ]);
       return 'Create size successfully';
     } catch (error) {
       return 'Size creation failed';
@@ -88,6 +91,7 @@ export class SizeService {
       Promise.all([
         this.redisService.deleteValue('sizes'),
         this.redisService.deleteValue(id),
+        this.redisService.deleteValue('usersizes'),
       ]);
       return 'Update size successfully';
     } catch (error) {
@@ -103,11 +107,37 @@ export class SizeService {
       });
       Promise.all([
         this.redisService.deleteValue('sizes'),
+        this.redisService.deleteValue('usersizes'),
         this.redisService.deleteValue(id),
       ]);
       return 'Delete size successfully';
     } catch (error) {
       return 'Store not found';
+    }
+  }
+  async getAllSizesClient() {
+    const sizesFromRedis = await this.redisService.getValueFromList(
+      'usersizes',
+    );
+    if (sizesFromRedis && sizesFromRedis.length !== 0) return sizesFromRedis;
+    else {
+      const sizes = await this.prismaService.size.findMany({
+        select: {
+          id: true,
+          name: true,
+          value: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+      if (!sizes) throw new NotFoundException('Sizes not found');
+      // set sizes to redisCache
+      await this.redisService.setValueToList(
+        'usersizes',
+        JSON.stringify(sizes),
+      );
+      return sizes;
     }
   }
 }
