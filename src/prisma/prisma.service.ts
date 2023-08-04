@@ -1,7 +1,6 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { DataBaseConnection } from 'src/databaseconnection';
-import { Connection } from 'src/main';
 
 @Injectable()
 export class PrismaService
@@ -23,11 +22,12 @@ export class PrismaService
     try {
       if (!this.isConnecting) {
         this.isConnecting = true;
-        await Connection();
+        await this.dataBaseConnection.connectToDatabase();
         console.log('Connected to the database.');
       }
     } catch (error) {
       this.isConnecting = false;
+      await this.connect();
       console.error('Error connecting to the database:', error.message);
     }
   }

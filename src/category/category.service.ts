@@ -150,27 +150,32 @@ export class CategoryService {
     }
   }
   async getCategories(filerts: Filers) {
-    const categories = await this.prismaService.category.findMany({
-      where: {
-        gender: filerts.gender,
-      },
-      select: {
-        id: true,
-        name: true,
-        storeId: true,
-        imageUrl: true,
-        billboard: {
-          select: {
-            label: true,
-          },
+    try {
+      const categories = await this.prismaService.category.findMany({
+        where: {
+          gender: filerts.gender,
         },
-        createdAt: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
-    if (!categories) throw new NotFoundException('Categories not found');
-    return categories;
+        select: {
+          id: true,
+          name: true,
+          storeId: true,
+          imageUrl: true,
+          billboard: {
+            select: {
+              label: true,
+            },
+          },
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+      if (!categories) throw new NotFoundException('Categories not found');
+      return categories;
+    } catch (error) {
+      console.log(error);
+      return 'Categories not found';
+    }
   }
 }

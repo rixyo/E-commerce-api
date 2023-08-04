@@ -2,8 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+
 async function main() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(
@@ -23,13 +22,4 @@ async function main() {
   });
   await app.listen(process.env.PORT || 5000);
 }
-export async function Connection() {
-  try {
-    await prisma.$connect();
-  } catch (error) {
-    window.location.reload();
-    console.error('Error connecting to the database:', error);
-  }
-}
-Connection();
 main();

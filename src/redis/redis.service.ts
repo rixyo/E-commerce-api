@@ -7,6 +7,7 @@ export class RedisService {
     try {
       this.redisClient = new Redis(process.env.REDIS_URL);
     } catch (error) {
+      this.redisClient = new Redis(process.env.REDIS_URL);
       console.log('redis_connection', error);
     }
   }

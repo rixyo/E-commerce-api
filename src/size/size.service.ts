@@ -115,29 +115,4 @@ export class SizeService {
       return 'Store not found';
     }
   }
-  async getAllSizesClient() {
-    const sizesFromRedis = await this.redisService.getValueFromList(
-      'usersizes',
-    );
-    if (sizesFromRedis && sizesFromRedis.length !== 0) return sizesFromRedis;
-    else {
-      const sizes = await this.prismaService.size.findMany({
-        select: {
-          id: true,
-          name: true,
-          value: true,
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      });
-      if (!sizes) throw new NotFoundException('Sizes not found');
-      // set sizes to redisCache
-      await this.redisService.setValueToList(
-        'usersizes',
-        JSON.stringify(sizes),
-      );
-      return sizes;
-    }
-  }
 }
