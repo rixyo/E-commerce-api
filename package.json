@@ -39,6 +39,7 @@
     "passport-google-oauth20": "^2.0.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.2.0",
+    "stripe": "^12.17.0",
     "yarn": "^1.22.19"
   },
   "devDependencies": {

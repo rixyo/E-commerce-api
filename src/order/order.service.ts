@@ -11,13 +11,12 @@ export class OrderService {
       },
       select: {
         id: true,
-        address: true,
-        phone: true,
         isPaid: true,
         isDelivered: true,
         deliveredAt: true,
+        address: true,
+        phone: true,
         createdAt: true,
-        quantity: true,
         orderItems: {
           select: {
             id: true,
@@ -44,6 +43,7 @@ export class OrderService {
                 },
               },
             },
+            quantity: true,
           },
         },
       },

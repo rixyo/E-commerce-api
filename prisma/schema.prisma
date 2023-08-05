@@ -30,6 +30,7 @@ model User {
   avatarUrl String?
   authType AuthType
   userRole UserRole @default(USER)
+  orders Order[] @relation("UserToOrder")
   rewiews Rewiew[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -106,19 +107,20 @@ model Product {
 model Order {
   id        String    @id @default(uuid())
   storeId     String    
+  userId      String
+  user        User      @relation("UserToOrder", fields: [userId], references: [id])
   store       Store     @relation("StoreToOrder", fields: [storeId], references: [id])
   orderItems OrderItem[]
-  quantity   Int
   isPaid     Boolean   @default(false)
   isDelivered Boolean   @default(false)
-  paidAt     DateTime?
-  deliveredAt DateTime?
   phone      String    @default("")
   address    String    @default("")
+  paidAt     DateTime?
+  deliveredAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-
   @@index([storeId])
+  @@index([userId])
 }
 
 
@@ -128,7 +130,7 @@ model OrderItem {
   order     Order   @relation(fields: [orderId], references: [id])
   productId String  
   product   Product @relation(fields: [productId], references: [id])
-
+  quantity  Int
   @@index([orderId])
   @@index([productId])
 }

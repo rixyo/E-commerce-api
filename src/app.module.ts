@@ -20,6 +20,7 @@ import { SizeModule } from './size/size.module';
 import { ColorModule } from './color/color.module';
 import { ProductModule } from './product/product.module';
 import { OrderModule } from './order/order.module';
+import { CheckoutModule } from './checkout/checkout.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { OrderModule } from './order/order.module';
     ColorModule,
     ProductModule,
     OrderModule,
+    CheckoutModule,
   ],
   controllers: [AppController, StoreController, BillboardController],
   providers: [
