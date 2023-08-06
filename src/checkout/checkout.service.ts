@@ -1,14 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { RedisService } from 'src/redis/redis.service';
 import Stripe from 'stripe';
 interface CreateCheckout {
   productIds: string[];
   quantity: number[];
+  size: string[];
+  color: string[];
 }
 @Injectable()
 export class CheckoutService {
   private stripe: Stripe;
-  constructor(private readonly prismaService: PrismaService) {
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly redisService: RedisService,
+  ) {
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
       apiVersion: '2022-11-15',
       typescript: true,
@@ -52,7 +58,15 @@ export class CheckoutService {
                   id: productId,
                 },
               },
-              quantity: data.quantity[0],
+              quantity: data.quantity.find((quantity, index) => {
+                return data.productIds[index] === productId;
+              }),
+              size: data.size.find((size, index) => {
+                return data.productIds[index] === productId;
+              }),
+              color: data.color.find((color, index) => {
+                return data.productIds[index] === productId;
+              }),
             })),
           },
         },
@@ -70,6 +84,10 @@ export class CheckoutService {
           orderId: order.id,
         },
       });
+      Promise.all([
+        this.redisService.deleteValue('user-orders'),
+        this.redisService.deleteValue('admin-orders'),
+      ]);
       return {
         id: session.id,
         url: session.url,
@@ -77,63 +95,5 @@ export class CheckoutService {
     } catch (error) {
       console.log(error);
     }
-  }
-  // webhooks for stripe
-  // but we need to verify the event
-  async webhook(body: any, signature: string) {
-    let event: Stripe.Event;
-    const bodyString = JSON.stringify(body);
-
-    try {
-      event = this.verifyWebhookEvent(
-        bodyString,
-        signature,
-        process.env.STRIPE_WEBHOOK_SECRET,
-      );
-    } catch (error: any) {
-      console.log(error.message);
-      return;
-    }
-    const session = event.data.object as Stripe.Checkout.Session;
-    const address = session?.customer_details?.address;
-    const addressComponents = [
-      address?.line1,
-      address?.line2,
-      address?.city,
-      address?.state,
-      address?.postal_code,
-      address?.country,
-    ];
-    const addressString = addressComponents
-      .filter((c) => c !== null)
-      .join(', ');
-    if (event.type === 'checkout.session.completed') {
-      await this.prismaService.order.update({
-        where: {
-          id: session?.metadata?.orderId,
-        },
-        data: {
-          isPaid: true,
-          address: addressString,
-          phone: session?.customer_details?.phone || '',
-        },
-        include: {
-          orderItems: true,
-        },
-      });
-    }
-    return { received: true };
-  }
-  verifyWebhookEvent(
-    payload: any,
-    sig: string,
-    endpointSecret: string,
-  ): Stripe.Event {
-    const event = this.stripe.webhooks.constructEvent(
-      payload,
-      sig,
-      endpointSecret,
-    );
-    return event;
   }
 }

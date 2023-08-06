@@ -21,6 +21,7 @@ import { ColorModule } from './color/color.module';
 import { ProductModule } from './product/product.module';
 import { OrderModule } from './order/order.module';
 import { CheckoutModule } from './checkout/checkout.module';
+import { WebhookModule } from './webhook/webhook.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { CheckoutModule } from './checkout/checkout.module';
     ProductModule,
     OrderModule,
     CheckoutModule,
+    WebhookModule,
   ],
   controllers: [AppController, StoreController, BillboardController],
   providers: [

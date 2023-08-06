@@ -115,7 +115,6 @@ model Order {
   isDelivered Boolean   @default(false)
   phone      String    @default("")
   address    String    @default("")
-  paidAt     DateTime?
   deliveredAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -131,6 +130,8 @@ model OrderItem {
   productId String  
   product   Product @relation(fields: [productId], references: [id])
   quantity  Int
+  size      String
+  color     String
   @@index([orderId])
   @@index([productId])
 }

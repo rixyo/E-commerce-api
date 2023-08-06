@@ -6,7 +6,6 @@ import { Observable } from 'rxjs';
 import { PrismaService } from 'src/prisma/prisma.service';
 interface JWTPayload {
   userId: string;
-  name: string;
   role: UserRole;
   iat: number;
   exp: number;
@@ -41,10 +40,14 @@ export class AuthGuard implements CanActivate {
     }
   }
   async matchRoles(roles: UserRole[], userId: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-    if (!user) return false;
-    return roles.includes(user?.userRole);
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+      });
+      if (!user) return false;
+      return roles.includes(user?.userRole);
+    } catch (error) {
+      return false;
+    }
   }
 }

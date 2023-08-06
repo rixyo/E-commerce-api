@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Headers, Req } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { CheckoutService } from './checkout.service';
 import { CreateCheckoutDto } from './dto/checkout.dto';
 import { User, userType } from 'src/user/decorators/user.decrator';
@@ -13,14 +13,7 @@ export class CheckoutController {
     return await this.checkoutService.createCheckout(
       data,
       user.userId,
-      '1b8c58fd-7e17-41ee-a7c4-4b8f0d2d4e0e',
+      '16694a2e-62d6-4b22-84cc-7f5589abd799',
     );
-  }
-  @Post('webhook')
-  async stripeWebhook(
-    @Headers('stripe-signature') sig: string,
-    @Req() req: any,
-  ) {
-    return await this.checkoutService.webhook(req.rawBody, sig);
   }
 }

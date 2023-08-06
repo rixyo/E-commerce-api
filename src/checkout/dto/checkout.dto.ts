@@ -7,4 +7,10 @@ export class CreateCheckoutDto {
   @IsNotEmpty()
   @IsArray()
   quantity: number[];
+  @IsNotEmpty()
+  @IsArray()
+  size: string[];
+  @IsNotEmpty()
+  @IsArray()
+  color: string[];
 }
