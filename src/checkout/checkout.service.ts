@@ -45,7 +45,7 @@ export class CheckoutService {
           },
         });
       });
-      const order = await this.prismaService.order.create({
+      const order = await this.prismaService.orders.create({
         data: {
           storeId: storeId,
           userId: userId,
@@ -84,9 +84,10 @@ export class CheckoutService {
           orderId: order.id,
         },
       });
-      Promise.all([
-        this.redisService.deleteValue('user-orders'),
+      await Promise.all([
         this.redisService.deleteValue('admin-orders'),
+        this.redisService.deleteValue('pendding-orders'),
+        this.redisService.deleteValue('delivered-orders'),
       ]);
       return {
         id: session.id,

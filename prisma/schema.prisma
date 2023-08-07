@@ -16,7 +16,7 @@ model Store {
   sizes Size[] @relation("StoreToSize")
   colors Color[] @relation("StoreToColor")
   products Product[] @relation("StoreToProduct")
-  orders Order[] @relation("StoreToOrder")
+  orders Orders[] @relation("StoreToOrder")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -30,8 +30,8 @@ model User {
   avatarUrl String?
   authType AuthType
   userRole UserRole @default(USER)
-  orders Order[] @relation("UserToOrder")
-  rewiews Rewiew[]
+  orders Orders[] 
+  rewiews Review[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -94,7 +94,7 @@ model Product {
   description String
   Sizes       ProductSize[]
   Colors      ProductColor[]
-  rewiews     Rewiew[]
+  rewiews     Review[]
   orders      OrderItem[]
   isFeatured  Boolean   @default(false)
   isArchived  Boolean   @default(false)
@@ -104,11 +104,11 @@ model Product {
   @@index([categoryId])
   
 }
-model Order {
+model Orders {
   id        String    @id @default(uuid())
   storeId     String    
   userId      String
-  user        User      @relation("UserToOrder", fields: [userId], references: [id])
+  user        User      @relation( fields: [userId], references: [id])
   store       Store     @relation("StoreToOrder", fields: [storeId], references: [id])
   orderItems OrderItem[]
   isPaid     Boolean   @default(false)
@@ -126,7 +126,7 @@ model Order {
 model OrderItem {
   id        String  @id @default(uuid())
   orderId   String  
-  order     Order   @relation(fields: [orderId], references: [id])
+  order     Orders   @relation(fields: [orderId], references: [id])
   productId String  
   product   Product @relation(fields: [productId], references: [id])
   quantity  Int
@@ -135,18 +135,28 @@ model OrderItem {
   @@index([orderId])
   @@index([productId])
 }
-model Rewiew{
+model Review{
   id String @id @default(uuid())
   userId String
   user User @relation(fields: [userId],references: [id],onDelete: Cascade)
   productId String
   product Product @relation(fields: [productId],references: [id],onDelete: Cascade)
   rating Int
+  images ReviewImage[]
   comment String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([userId])
   @@index([productId])
+}
+model ReviewImage {
+  id String @id @default(uuid())
+  rewiewId String
+  rewiew Review @relation(fields: [rewiewId],references: [id],onDelete: Cascade)
+  url String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([rewiewId])
 }
 model ProductColor {
   id String @id @default(uuid())

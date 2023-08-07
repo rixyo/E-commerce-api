@@ -14,7 +14,7 @@ export class OrderService {
     );
     if (cachedOrders && cachedOrders.length !== 0) return cachedOrders;
     else {
-      const orders = await this.prismaService.order.findMany({
+      const orders = await this.prismaService.orders.findMany({
         where: {
           storeId: storeId,
         },
@@ -54,51 +54,141 @@ export class OrderService {
       return orders;
     }
   }
-  async getUserOrders(userId: string) {
-    const cachedOrders = await this.redisService.getValueFromList(
-      'user-orders',
+  async getOrder(orderId: string) {
+    const cachedOrder = await this.redisService.getValueFromHash(
+      orderId,
+      'order',
     );
-    if (cachedOrders && cachedOrders.length !== 0) return cachedOrders;
+    if (cachedOrder) return cachedOrder;
     else {
-      const orders = await this.prismaService.order.findMany({
+      const order = await this.prismaService.orders.findUnique({
         where: {
-          userId: userId,
-          isDelivered: false,
+          id: orderId,
         },
         select: {
           id: true,
-          createdAt: true,
-          orderItems: {
-            select: {
-              id: true,
-              product: {
-                select: {
-                  id: true,
-                  name: true,
-                  Images: {
-                    select: {
-                      url: true,
-                    },
-                    take: 1,
-                  },
-                },
-              },
-              quantity: true,
-              size: true,
-              color: true,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: 'desc',
+          isDelivered: true,
+          deliveredAt: true,
         },
       });
-      if (!orders) throw new NotFoundException('Orders not found');
-      await this.redisService.setValueToList(
-        'user-orders',
-        JSON.stringify(orders),
+      if (!order) throw new NotFoundException('Order not found');
+      await this.redisService.setValueToHash(
+        orderId,
+        'order',
+        JSON.stringify(order),
       );
-      return orders;
+      return order;
     }
+  }
+  async updateOrder(orderId: string, delivaryTime: Date, isDelivered: boolean) {
+    await this.prismaService.orders.update({
+      where: {
+        id: orderId,
+      },
+      data: {
+        isDelivered: isDelivered,
+        deliveredAt: delivaryTime,
+      },
+    });
+    await Promise.all([
+      this.redisService.deleteValue('admin-orders'),
+      this.redisService.deleteValue(orderId),
+    ]);
+
+    return 'order updated successfully';
+  }
+  async getUserPenddingOrders(userId: string) {
+    const getPenddingOrders = await this.redisService.getValueFromList(
+      'pendding-orders',
+    );
+    if (getPenddingOrders && getPenddingOrders.length !== 0)
+      return getPenddingOrders;
+    const orders = await this.prismaService.orders.findMany({
+      where: {
+        userId: userId,
+        isDelivered: false,
+      },
+      select: {
+        id: true,
+        createdAt: true,
+        orderItems: {
+          select: {
+            id: true,
+            product: {
+              select: {
+                id: true,
+                name: true,
+                Images: {
+                  select: {
+                    url: true,
+                  },
+                  take: 1,
+                },
+              },
+            },
+            quantity: true,
+            size: true,
+            color: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+    if (!orders) throw new NotFoundException('Orders not found');
+    await this.redisService.setValueToList(
+      'pendding-orders',
+      JSON.stringify(orders),
+    );
+
+    return orders;
+  }
+  async getUserDeliveredOrders(userId: string) {
+    const getDeliveredOrders = await this.redisService.getValueFromList(
+      'delivered-orders',
+    );
+    if (getDeliveredOrders && getDeliveredOrders.length !== 0)
+      return getDeliveredOrders;
+    const orders = await this.prismaService.orders.findMany({
+      where: {
+        userId: userId,
+        isDelivered: true,
+      },
+      select: {
+        id: true,
+        deliveredAt: true,
+        orderItems: {
+          select: {
+            id: true,
+            product: {
+              select: {
+                id: true,
+                name: true,
+                Images: {
+                  select: {
+                    url: true,
+                  },
+                  take: 1,
+                },
+              },
+            },
+            quantity: true,
+            size: true,
+            color: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+    if (!orders) throw new NotFoundException('Orders not found');
+    await this.redisService.setValueToList(
+      'delivered-orders',
+      JSON.stringify(orders),
+    );
+
+    return orders;
   }
 }

@@ -41,7 +41,7 @@ export class WebhookService {
       .filter((c) => c !== null)
       .join(', ');
     if (event.type === 'checkout.session.completed') {
-      await this.prismaService.order.update({
+      const order = await this.prismaService.orders.update({
         where: {
           id: session?.metadata?.orderId,
         },
@@ -54,9 +54,11 @@ export class WebhookService {
           orderItems: true,
         },
       });
-      Promise.all([
-        this.redisService.deleteValue('user-orders'),
+      await Promise.all([
         this.redisService.deleteValue('admin-orders'),
+        this.redisService.deleteValue('pendding-orders'),
+        this.redisService.deleteValue('delivered-orders'),
+        this.redisService.deleteValue(order.id),
       ]);
     }
     return { received: true };

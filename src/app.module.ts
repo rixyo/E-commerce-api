@@ -22,7 +22,7 @@ import { ProductModule } from './product/product.module';
 import { OrderModule } from './order/order.module';
 import { CheckoutModule } from './checkout/checkout.module';
 import { WebhookModule } from './webhook/webhook.module';
-
+import { ReviewModule } from './review/review.module';
 @Module({
   imports: [
     StoreModule,
@@ -38,6 +38,7 @@ import { WebhookModule } from './webhook/webhook.module';
     OrderModule,
     CheckoutModule,
     WebhookModule,
+    ReviewModule,
   ],
   controllers: [AppController, StoreController, BillboardController],
   providers: [
