@@ -255,18 +255,12 @@ export class ProductService {
     const take = parseInt(`${limit}`);
     const products = await this.prismaService.product.findMany({
       where: {
-        OR: [
-          {
-            name: {
-              contains: query,
-            },
-            category: {
-              name: {
-                contains: query,
-              },
-            },
-          },
-        ],
+        name: {
+          search: query,
+        },
+        description: {
+          search: query,
+        },
       },
       select: {
         id: true,
@@ -275,6 +269,7 @@ export class ProductService {
         description: true,
         isArchived: true,
         isFeatured: true,
+
         Images: {
           select: {
             id: true,

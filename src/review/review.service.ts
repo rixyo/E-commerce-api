@@ -28,6 +28,9 @@ export class ReviewService {
           },
         },
       },
+      select: {
+        id: true,
+      },
     });
     if (!order) {
       throw new ConflictException('You have not ordered this product.');
@@ -36,6 +39,9 @@ export class ReviewService {
       where: {
         userId: userId,
         productId: productId,
+      },
+      select: {
+        id: true,
       },
     });
 
@@ -54,9 +60,130 @@ export class ReviewService {
       ...image,
       rewiewId: review.id,
     }));
-    await this.prismaService.reviewImage.createMany({
-      data: reviewImage,
-    });
+    Promise.all([
+      this.prismaService.reviewImage.createMany({
+        data: reviewImage,
+      }),
+      this.redisService.deleteValue('product-reviews'),
+      this.redisService.deleteValue('user-reviews'),
+    ]);
     return 'Review created successfully.';
+  }
+  async checkIfUserIsEligibleToReview(userId: string, productId: string) {
+    const order = await this.prismaService.orders.findFirst({
+      where: {
+        userId: userId,
+        orderItems: {
+          some: {
+            productId: productId,
+          },
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+    if (!order) {
+      return false;
+    }
+    const existingReview = await this.prismaService.review.findFirst({
+      where: {
+        userId: userId,
+        productId: productId,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (existingReview) {
+      return false;
+    }
+    return true;
+  }
+  async getUserReviews(userId: string) {
+    const getReviewsFromCache = await this.redisService.getValueFromList(
+      'user-reviews',
+    );
+    if (getReviewsFromCache && getReviewsFromCache.length !== 0)
+      return getReviewsFromCache;
+    const reviews = await this.prismaService.review.findMany({
+      where: {
+        userId: userId,
+      },
+      select: {
+        id: true,
+        rating: true,
+        images: {
+          select: {
+            url: true,
+          },
+          take: 1,
+        },
+        comment: true,
+        createdAt: true,
+        product: {
+          select: {
+            name: true,
+            price: true,
+            Images: {
+              select: {
+                url: true,
+              },
+              take: 1,
+            },
+          },
+        },
+      },
+    });
+    await this.redisService.setValueToList(
+      'user-reviews',
+      JSON.stringify(reviews),
+    );
+    return reviews;
+  }
+  async deleteReview(reviewId: string, userId: string) {
+    await this.prismaService.review.delete({
+      where: {
+        id: reviewId,
+        userId: userId,
+      },
+    });
+    Promise.all([
+      this.redisService.deleteValue('product-reviews'),
+      this.redisService.deleteValue('user-reviews'),
+    ]);
+    return 'Review deleted successfully.';
+  }
+  async getReviews(productId: string, page: number) {
+    const take = 5;
+    const skip = (page - 1) * take;
+    const reviews = await this.prismaService.review.findMany({
+      where: {
+        productId: productId,
+      },
+      select: {
+        id: true,
+        rating: true,
+        images: {
+          select: {
+            url: true,
+          },
+        },
+        comment: true,
+        createdAt: true,
+        user: {
+          select: {
+            displayName: true,
+            avatarUrl: true,
+          },
+        },
+      },
+      take: take,
+      skip: skip,
+    });
+    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+    const averageRating = totalRating / reviews.length;
+    return { reviews, averageRating };
   }
 }

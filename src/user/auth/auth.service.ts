@@ -118,7 +118,7 @@ export class AuthService {
         avatarUrl: data.avaterUrl,
       },
     });
-    Promise.all([this.redis.deleteValue(userId)]);
+    await this.redis.deleteValue(userId);
     return 'Information updated successfully';
   }
 }

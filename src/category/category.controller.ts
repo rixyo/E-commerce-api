@@ -17,11 +17,8 @@ import { Roles } from 'src/decoratores/role.decorator';
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
   @Get('')
-  async getCategories(@Query('gender') gender?: string) {
-    const filerts = {
-      ...(gender && { gender }),
-    };
-    return await this.categoryService.getCategories(filerts);
+  async getCategories(@Query('gender') gender: string) {
+    return await this.categoryService.getCategories(gender);
   }
 
   @Get(':storeId/findall')

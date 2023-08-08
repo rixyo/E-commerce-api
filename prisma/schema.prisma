@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+   previewFeatures = ["fullTextSearch", "fullTextIndex"]
 }
 datasource db {
   provider = "mysql"
@@ -102,6 +103,7 @@ model Product {
   updatedAt   DateTime  @updatedAt
   @@index([storeId])
   @@index([categoryId])
+  @@fulltext([name, description])
   
 }
 model Orders {
@@ -185,6 +187,10 @@ model Image {
   updatedAt   DateTime @updatedAt
 
   @@index([productId])
+}
+model SearchQuery {
+  id                 String @id @default(uuid())
+  query              String
 }
 enum AuthType {
   GOOGLE

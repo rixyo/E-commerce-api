@@ -93,6 +93,8 @@ export class OrderService {
     await Promise.all([
       this.redisService.deleteValue('admin-orders'),
       this.redisService.deleteValue(orderId),
+      this.redisService.deleteValue('pendding-orders'),
+      this.redisService.deleteValue('delivered-orders'),
     ]);
 
     return 'order updated successfully';

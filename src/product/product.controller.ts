@@ -21,7 +21,6 @@ export class ProductController {
     @Query('search_query') search_query: string,
     @Query('page') page: number,
   ) {
-    if (!search_query || search_query === '') return [];
     return await this.productService.searchProduct(search_query, page, 10);
   }
   @Get('')

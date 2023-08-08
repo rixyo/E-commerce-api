@@ -2,9 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RedisService } from 'src/redis/redis.service';
 
-type Filers = {
-  gender?: string;
-};
 interface CreateCategory {
   name: string;
   billboardId: string;
@@ -149,11 +146,11 @@ export class CategoryService {
       throw new Error('Category not deleted');
     }
   }
-  async getCategories(filerts: Filers) {
+  async getCategories(gender: string) {
     try {
       const categories = await this.prismaService.category.findMany({
         where: {
-          gender: filerts.gender,
+          gender: gender,
         },
         select: {
           id: true,
