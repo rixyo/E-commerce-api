@@ -13,7 +13,7 @@ export class ReviewService {
     private readonly prismaService: PrismaService,
     private readonly redisService: RedisService,
   ) {}
-
+  //create review
   async createReview(
     userId: string,
     productId: string,
@@ -69,6 +69,7 @@ export class ReviewService {
     ]);
     return 'Review created successfully.';
   }
+  // check if user is eligible to review
   async checkIfUserIsEligibleToReview(userId: string, productId: string) {
     const order = await this.prismaService.orders.findFirst({
       where: {
@@ -101,6 +102,7 @@ export class ReviewService {
     }
     return true;
   }
+  // get user reviews
   async getUserReviews(userId: string) {
     const getReviewsFromCache = await this.redisService.getValueFromList(
       'user-reviews',
@@ -142,6 +144,7 @@ export class ReviewService {
     );
     return reviews;
   }
+  // delete review
   async deleteReview(reviewId: string, userId: string) {
     await this.prismaService.review.delete({
       where: {
@@ -155,6 +158,7 @@ export class ReviewService {
     ]);
     return 'Review deleted successfully.';
   }
+  // get reviews for product
   async getReviews(productId: string, page: number) {
     const take = 5;
     const skip = (page - 1) * take;
@@ -182,6 +186,7 @@ export class ReviewService {
       take: take,
       skip: skip,
     });
+    // calculate average rating
     const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
     const averageRating = totalRating / reviews.length;
     return { reviews, averageRating };

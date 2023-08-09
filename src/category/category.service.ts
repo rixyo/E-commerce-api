@@ -91,6 +91,7 @@ export class CategoryService {
       return category;
     }
   }
+  // create category
   async createCategory(data: CreateCategory, storeId: string) {
     try {
       await this.prismaService.category.create({
@@ -109,6 +110,7 @@ export class CategoryService {
       throw new Error('Category not created');
     }
   }
+  // update category
   async updateCategoryById(id: string, data: CreateCategory) {
     try {
       await this.prismaService.category.update({
@@ -121,6 +123,7 @@ export class CategoryService {
           imageUrl: data.imageUrl,
         },
       });
+      // delete category from redisCache
       Promise.all([
         this.redisService.deleteValue('admincategories'),
         this.redisService.deleteValue(id),
@@ -130,6 +133,7 @@ export class CategoryService {
       throw new Error('Category not updated');
     }
   }
+  // delete category
   async deleteCategoryById(id: string) {
     try {
       await this.prismaService.category.delete({
@@ -137,6 +141,7 @@ export class CategoryService {
           id: id,
         },
       });
+      // delete category from redisCache
       Promise.all([
         this.redisService.deleteValue('admincategories'),
         this.redisService.deleteValue(id),
@@ -146,10 +151,13 @@ export class CategoryService {
       throw new Error('Category not deleted');
     }
   }
-  async getCategories(gender: string) {
+  // get categories for user based on gender
+  async getCategories(storeId: string, gender: string) {
     try {
+      if (gender === undefined) return;
       const categories = await this.prismaService.category.findMany({
         where: {
+          storeId,
           gender: gender,
         },
         select: {

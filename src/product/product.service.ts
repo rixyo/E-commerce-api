@@ -88,6 +88,7 @@ export class ProductService {
       return products;
     }
   }
+  // get product by id
   async getProductById(id: string) {
     // get product from redisCache
     const productFromRedis = await this.redisService.getValueFromHash(
@@ -143,6 +144,7 @@ export class ProductService {
       return product;
     }
   }
+  // create product
   async createProduct(body: CreateProduct, storeId: string) {
     try {
       const product = await this.prismaService.product.create({
@@ -156,6 +158,7 @@ export class ProductService {
           isFeatured: body.isFeatured,
         },
       });
+      // create images,size and color for product
       const productImage = body.images.map((image) => ({
         ...image,
         productId: product.id,
@@ -168,6 +171,7 @@ export class ProductService {
         ...size,
         productId: product.id,
       }));
+      // add images,size and color to product
       await Promise.all([
         this.prismaService.image.createMany({
           data: productImage,
@@ -186,6 +190,7 @@ export class ProductService {
       throw new Error(error);
     }
   }
+  // update product by id
   async updateProductById(id: string, body: CreateProduct) {
     try {
       const product = await this.prismaService.product.update({
@@ -201,6 +206,7 @@ export class ProductService {
           isFeatured: body.isFeatured,
         },
       });
+      // create new images,size and color for product
       const productColor = body.colors.map((color) => ({
         ...color,
         productId: product.id,
@@ -209,6 +215,7 @@ export class ProductService {
         ...size,
         productId: product.id,
       }));
+      // delete old images,size,color and add new images,size and color to product
       await Promise.all([
         this.prismaService.productColor.deleteMany({
           where: {
@@ -234,6 +241,7 @@ export class ProductService {
       throw new Error(error);
     }
   }
+  // delete product by id
   async deleteProductById(id: string) {
     try {
       await this.prismaService.product.delete({
@@ -250,7 +258,13 @@ export class ProductService {
       throw new Error(error);
     }
   }
-  async searchProduct(query: string, page: number, limit: number) {
+  // search product by name or description and return paginated result
+  async searchProduct(
+    storeId: string,
+    query: string,
+    page: number,
+    limit: number,
+  ) {
     const skip = (page - 1) * limit;
     const take = parseInt(`${limit}`);
     const products = await this.prismaService.product.findMany({
@@ -307,12 +321,21 @@ export class ProductService {
     if (!products) return 'No products found';
     return products;
   }
-  async filterProduct(filters: Filters, page: number, perPage: number) {
+  // filter product and return paginated result
+  async filterProduct(
+    storeId: string,
+    filters: Filters,
+    page: number,
+    perPage: number,
+  ) {
     const skip = (page - 1) * perPage;
     const take = parseInt(`${perPage}`);
     try {
       const products = await this.prismaService.product.findMany({
-        where: filters,
+        where: {
+          storeId: storeId,
+          ...filters,
+        },
         select: {
           id: true,
           name: true,

@@ -34,4 +34,12 @@ export class RedisService {
     const serializedValue = await this.redisClient.lrange(key, 0, -1);
     return serializedValue[0];
   }
+  async setValueAsString(key: string, value: string) {
+    await this.redisClient.set(key, value);
+    this.redisClient.expire(key, 60 * 60 * 24 * 1);
+  }
+  async getValueAsString(key: string) {
+    const serializedValue = await this.redisClient.get(key);
+    return serializedValue;
+  }
 }

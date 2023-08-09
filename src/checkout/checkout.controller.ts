@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Param, ParseUUIDPipe, Post } from '@nestjs/common';
 import { CheckoutService } from './checkout.service';
 import { CreateCheckoutDto } from './dto/checkout.dto';
 import { User, userType } from 'src/user/decorators/user.decrator';
@@ -8,12 +8,17 @@ import { Roles } from 'src/decoratores/role.decorator';
 export class CheckoutController {
   constructor(private readonly checkoutService: CheckoutService) {}
   @Roles('USER')
-  @Post('')
-  async checkout(@Body() data: CreateCheckoutDto, @User() user: userType) {
+  @Post(':storeId')
+  async checkout(
+    @Body() data: CreateCheckoutDto,
+    @User() user: userType,
+    @Param('storeId', new ParseUUIDPipe()) storeId: string,
+  ) {
+    // passing static storeId for now but in future we will get it from user
     return await this.checkoutService.createCheckout(
       data,
       user.userId,
-      '16694a2e-62d6-4b22-84cc-7f5589abd799',
+      storeId,
     );
   }
 }

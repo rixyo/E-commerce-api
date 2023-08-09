@@ -16,15 +16,22 @@ import { createProductDto } from './dto/product.dto';
 @Controller('product')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
-  @Get('result')
+  @Get(':storeId/result')
   async searchProduct(
+    @Param('storeId', new ParseUUIDPipe()) storeId: string,
     @Query('search_query') search_query: string,
     @Query('page') page: number,
   ) {
-    return await this.productService.searchProduct(search_query, page, 10);
+    return await this.productService.searchProduct(
+      storeId,
+      search_query,
+      page,
+      10,
+    );
   }
-  @Get('')
+  @Get(':storeId/filter')
   async filterProducts(
+    @Param('storeId', new ParseUUIDPipe()) storeId: string,
     @Query('page') page: number,
     @Query('category') category?: { name: string },
     @Query('minPrice') minPrice?: string,
@@ -43,7 +50,7 @@ export class ProductController {
       ...(price && { price }),
       ...(isFeatured && { isFeatured }),
     };
-    return await this.productService.filterProduct(filters, page, 10);
+    return await this.productService.filterProduct(storeId, filters, page, 10);
   }
   @Get(':storeId/findall')
   async getAllProducts(@Param('storeId', new ParseUUIDPipe()) storeId: string) {

@@ -1,3 +1,4 @@
+// Purpose: Checkout service for checkout module and stripe payment.
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RedisService } from 'src/redis/redis.service';
@@ -30,9 +31,11 @@ export class CheckoutService {
         },
       });
       if (products.length === 0) throw new Error('No product found');
+      // create line items for stripe checkout
       const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
       products.forEach((product) => {
         line_items.push({
+          // get quantity from data.quantity array by matching product id
           quantity: data.quantity.find(
             (quantity, index) => data.productIds[index] === product.id,
           ),
@@ -58,6 +61,7 @@ export class CheckoutService {
                   id: productId,
                 },
               },
+              // get quantity from data.quantity array by matching product id and same for size and color
               quantity: data.quantity.find((quantity, index) => {
                 return data.productIds[index] === productId;
               }),
@@ -71,6 +75,7 @@ export class CheckoutService {
           },
         },
       });
+      // create stripe checkout session and return session id and url
       const session = await this.stripe.checkout.sessions.create({
         line_items,
         mode: 'payment',
@@ -88,6 +93,7 @@ export class CheckoutService {
         this.redisService.deleteValue('admin-orders'),
         this.redisService.deleteValue('pendding-orders'),
         this.redisService.deleteValue('delivered-orders'),
+        this.redisService.deleteValue('total_revenue'),
       ]);
       return {
         id: session.id,

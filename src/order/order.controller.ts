@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseUUIDPipe,
@@ -31,7 +32,7 @@ export class OrderController {
   @Roles('ADMIN')
   @Get(':id')
   async getOrderById(@Param('id', new ParseUUIDPipe()) id: string) {
-    return await this.orderService.getOrder(id);
+    return await this.orderService.getOrderById(id);
   }
   @Roles('ADMIN')
   @Patch(':id/update')
@@ -44,5 +45,9 @@ export class OrderController {
       body.deliveredAt,
       body.isDelivered,
     );
+  }
+  @Delete(':id/delete')
+  async deleteOrder(@Param('id', new ParseUUIDPipe()) id: string) {
+    return await this.orderService.deleteOrder(id);
   }
 }

@@ -8,7 +8,9 @@ export class OrderService {
     private readonly prismaService: PrismaService,
     private readonly redisService: RedisService,
   ) {}
+  // get all orders for a store
   async getAllOrders(storeId: string) {
+    // get orders from redisCache
     const cachedOrders = await this.redisService.getValueFromList(
       'admin-orders',
     );
@@ -47,6 +49,7 @@ export class OrderService {
         },
       });
       if (!orders) throw new NotFoundException('Orders not found');
+      // set orders to redisCache
       await this.redisService.setValueToList(
         'admin-orders',
         JSON.stringify(orders),
@@ -54,7 +57,8 @@ export class OrderService {
       return orders;
     }
   }
-  async getOrder(orderId: string) {
+  // get a single order by id
+  async getOrderById(orderId: string) {
     const cachedOrder = await this.redisService.getValueFromHash(
       orderId,
       'order',
@@ -80,6 +84,7 @@ export class OrderService {
       return order;
     }
   }
+  // update order status
   async updateOrder(orderId: string, delivaryTime: Date, isDelivered: boolean) {
     await this.prismaService.orders.update({
       where: {
@@ -90,15 +95,18 @@ export class OrderService {
         deliveredAt: delivaryTime,
       },
     });
+    // delete all orders from redisCache
     await Promise.all([
       this.redisService.deleteValue('admin-orders'),
       this.redisService.deleteValue(orderId),
       this.redisService.deleteValue('pendding-orders'),
       this.redisService.deleteValue('delivered-orders'),
+      this.redisService.deleteValue('total_revenue'),
     ]);
 
     return 'order updated successfully';
   }
+  // get all pendding orders for a user
   async getUserPenddingOrders(userId: string) {
     const getPenddingOrders = await this.redisService.getValueFromList(
       'pendding-orders',
@@ -146,6 +154,7 @@ export class OrderService {
 
     return orders;
   }
+  // get all delivered orders for a user
   async getUserDeliveredOrders(userId: string) {
     const getDeliveredOrders = await this.redisService.getValueFromList(
       'delivered-orders',
@@ -192,5 +201,21 @@ export class OrderService {
     );
 
     return orders;
+  }
+  async deleteOrder(orderId: string) {
+    await this.prismaService.orders.delete({
+      where: {
+        id: orderId,
+      },
+    });
+    // delete all orders from redisCache
+    await Promise.all([
+      this.redisService.deleteValue('admin-orders'),
+      this.redisService.deleteValue(orderId),
+      this.redisService.deleteValue('pendding-orders'),
+      this.redisService.deleteValue('delivered-orders'),
+      this.redisService.deleteValue('total_revenue'),
+    ]);
+    return 'order deleted successfully';
   }
 }

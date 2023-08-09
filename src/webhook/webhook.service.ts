@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RedisService } from 'src/redis/redis.service';
 import Stripe from 'stripe';
-
+// this is the Stripe webhook service that will be used to handle Stripe events and update the database accordingly
 @Injectable()
 export class WebhookService {
   private stripe: Stripe;
@@ -56,9 +56,10 @@ export class WebhookService {
       });
       await Promise.all([
         this.redisService.deleteValue('admin-orders'),
+        this.redisService.deleteValue(order.id),
         this.redisService.deleteValue('pendding-orders'),
         this.redisService.deleteValue('delivered-orders'),
-        this.redisService.deleteValue(order.id),
+        this.redisService.deleteValue('total_revenue'),
       ]);
     }
     return { received: true };
