@@ -9,6 +9,11 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { RedisService } from 'src/redis/redis.service';
 import { UpdateUserDTO } from './dot/auth.dto';
+interface RestPasswordBody {
+  email: string;
+  password: string;
+  token: string;
+}
 @Injectable()
 export class AuthService {
   constructor(
@@ -120,5 +125,36 @@ export class AuthService {
     });
     await this.redis.deleteValue(userId);
     return 'Information updated successfully';
+  }
+  async resetPassword(body: RestPasswordBody) {
+    const keyfromRedis = await this.redis.getValueAsString(body.email);
+    if (!keyfromRedis) throw new NotFoundException('Key not found');
+    else if (keyfromRedis !== body.token)
+      throw new ConflictException('Key not matched');
+    const passwordHash = await bcrypt.hash(body.password, 10);
+    const isUserExist = await this.isUserExist(body.email);
+    if (!isUserExist) throw new NotFoundException('User not found');
+    const user = await this.prisma.user.update({
+      where: {
+        email: body.email,
+      },
+      data: {
+        passwordHash: passwordHash,
+      },
+    });
+    await this.redis.deleteValue(user.id);
+    return 'Password updated successfully';
+  }
+  async isUserExist(email: string) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        email: email,
+      },
+      select: {
+        id: true,
+      },
+    });
+    if (user) return true;
+    else return false;
   }
 }

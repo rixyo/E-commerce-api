@@ -1,11 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { Redis } from 'ioredis';
+
 @Injectable()
 export class RedisService {
   private readonly redisClient: Redis;
   constructor() {
     try {
-      this.redisClient = new Redis(process.env.REDIS_URL);
+      this.redisClient = new Redis({
+        host: 'localhost',
+        port: 6379,
+      });
     } catch (error) {
       this.redisClient = new Redis(process.env.REDIS_URL);
       console.log('redis_connection', error);
@@ -41,5 +45,9 @@ export class RedisService {
   async getValueAsString(key: string) {
     const serializedValue = await this.redisClient.get(key);
     return serializedValue;
+  }
+  async setResetpassword(key: string, value: string) {
+    await this.redisClient.set(key, value);
+    this.redisClient.expire(key, 300000);
   }
 }

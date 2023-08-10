@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  cache-db:
+    image: redis:6.0.7
+    restart: always
+    volumes:
+      - redis_volume_data:/data
+    ports:
+      - 6379:6379
+volumes:
+  redis_volume_data: 

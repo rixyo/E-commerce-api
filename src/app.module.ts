@@ -24,6 +24,7 @@ import { CheckoutModule } from './checkout/checkout.module';
 import { WebhookModule } from './webhook/webhook.module';
 import { ReviewModule } from './review/review.module';
 import { RevenueModule } from './revenue/revenue.module';
+import { EmailModule } from './email/email.module';
 @Module({
   imports: [
     StoreModule,
@@ -41,6 +42,7 @@ import { RevenueModule } from './revenue/revenue.module';
     WebhookModule,
     ReviewModule,
     RevenueModule,
+    EmailModule,
   ],
   controllers: [AppController, StoreController, BillboardController],
   providers: [

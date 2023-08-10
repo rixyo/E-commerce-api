@@ -1,11 +1,21 @@
 import { Controller, Get, Post, Body, Patch } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginDTO, SingupDTO, UpdateUserDTO } from './dot/auth.dto';
+import {
+  LoginDTO,
+  RestPasswordDTO,
+  SingupDTO,
+  UpdatePasswordDTO,
+  UpdateUserDTO,
+} from './dot/auth.dto';
 import { Roles } from 'src/decoratores/role.decorator';
 import { User, userType } from '../decorators/user.decrator';
+import { EmailService } from 'src/email/email.service';
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly emailService: EmailService,
+  ) {}
   @Post('login')
   async login(@Body() body: LoginDTO) {
     return this.authService.validateUserFromEmailPassword(
@@ -21,6 +31,18 @@ export class AuthController {
       body.password,
     );
   }
+  @Post('forgot-password')
+  async forgotPassword(@Body() body: RestPasswordDTO) {
+    let message: string;
+    const user = await this.authService.isUserExist(body.email);
+    if (!user) {
+      message = 'User not found';
+      return message;
+    }
+    message = 'Email sent successfully';
+    await this.emailService.sendEmail(body.email);
+    return message;
+  }
   @Roles('ADMIN', 'USER')
   @Get('me')
   async me(@User() user: userType) {
@@ -30,5 +52,9 @@ export class AuthController {
   @Patch('update')
   async update(@User() user: userType, @Body() body: UpdateUserDTO) {
     return this.authService.updateUserInfo(body, user.userId);
+  }
+  @Post('reset-password')
+  async resetPassword(@Body() body: UpdatePasswordDTO) {
+    return this.authService.resetPassword(body);
   }
 }
