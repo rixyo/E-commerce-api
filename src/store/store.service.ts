@@ -78,7 +78,7 @@ export class StoreService {
     return store;
   }
 
-  async getAllStore(userId: string) {
+  async getAllStores(userId: string) {
     // get stores from redisCache
     const storesFromRedis = await this.redis.getValueFromList('stores');
     if (storesFromRedis && storesFromRedis.length !== 0) return storesFromRedis;
@@ -93,7 +93,7 @@ export class StoreService {
           userId: true,
         },
       });
-      if (!store) throw new NotFoundException('Store not found');
+      if (!store.length) throw new NotFoundException('Stores not found');
       // set stores to redisCache
       await this.redis.setValueToList('stores', JSON.stringify(store));
       return store;

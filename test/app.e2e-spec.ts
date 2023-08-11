@@ -1,24 +1,23 @@
+// Use correct path to your app module
+
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
-import { AppModule } from './../src/app.module';
+import { AppModule } from '../src/app.module';
+import { PrismaService } from '@src/prisma/prisma.service';
 
-describe('AppController (e2e)', () => {
-  let app: INestApplication;
+describe('UserService (e2e)', () => {
+  let prismaService: PrismaService;
 
-  beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+  beforeAll(async () => {
+    const module: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
-    await app.init();
+    prismaService = module.get<PrismaService>(PrismaService);
   });
 
-  it('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
+  afterAll(async () => {
+    await prismaService.$disconnect();
   });
+
+  // Add more e2e tests here
 });

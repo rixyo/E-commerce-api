@@ -79,9 +79,6 @@ export class ColorService {
         },
         select: {
           id: true,
-          name: true,
-          storeId: true,
-          value: true,
         },
       });
       await this.redisService.deleteValue('colors');

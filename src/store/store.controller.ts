@@ -24,7 +24,7 @@ export class StoreController {
   @Roles('ADMIN')
   @Get('all')
   async getAllStore(@User() user: userType) {
-    return await this.storeService.getAllStore(user.userId);
+    return await this.storeService.getAllStores(user.userId);
   }
   @Roles('ADMIN')
   @Get(':id')
