@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { RedisService } from 'src/redis/redis.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { RedisService } from '../redis/redis.service';
 interface CreateSize {
   name: string;
   value: string;
@@ -68,10 +68,9 @@ export class SizeService {
           value: data.value,
         },
       });
-      Promise.all([
-        this.redisService.deleteValue('sizes'),
-        this.redisService.deleteValue('usersizes'),
-      ]);
+
+      await this.redisService.deleteValue('sizes');
+
       return 'Create size successfully';
     } catch (error) {
       return 'Size creation failed';
@@ -91,7 +90,6 @@ export class SizeService {
       Promise.all([
         this.redisService.deleteValue('sizes'),
         this.redisService.deleteValue(id),
-        this.redisService.deleteValue('usersizes'),
       ]);
       return 'Update size successfully';
     } catch (error) {
@@ -107,7 +105,6 @@ export class SizeService {
       });
       Promise.all([
         this.redisService.deleteValue('sizes'),
-        this.redisService.deleteValue('usersizes'),
         this.redisService.deleteValue(id),
       ]);
       return 'Delete size successfully';

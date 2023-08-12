@@ -10,8 +10,8 @@ import {
 } from '@nestjs/common';
 import { StoreService } from './store.service';
 import { CreateStoreDto } from './dto/store.dto';
-import { Roles } from 'src/decoratores/role.decorator';
-import { User, userType } from 'src/user/decorators/user.decrator';
+import { Roles } from '../decoratores/role.decorator';
+import { User, userType } from '../user/decorators/user.decrator';
 
 @Controller('store')
 export class StoreController {

@@ -1,6 +1,6 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { RedisService } from 'src/redis/redis.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { RedisService } from '../redis/redis.service';
 
 interface CreateReview {
   rating: number;
@@ -159,7 +159,7 @@ export class ReviewService {
     return 'Review deleted successfully.';
   }
   // get reviews for product
-  async getReviews(productId: string, page: number) {
+  async productReview(productId: string, page: number) {
     const take = 5;
     const skip = (page - 1) * take;
     const reviews = await this.prismaService.review.findMany({

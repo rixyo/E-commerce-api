@@ -1,7 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { RedisService } from 'src/redis/redis.service';
-
+import { PrismaService } from '../prisma/prisma.service';
+import { RedisService } from '../redis/redis.service';
+interface updateOrder {
+  isDelivered: boolean;
+  deliveredAt: string;
+}
 @Injectable()
 export class OrderService {
   constructor(
@@ -85,14 +88,14 @@ export class OrderService {
     }
   }
   // update order status
-  async updateOrder(orderId: string, delivaryTime: Date, isDelivered: boolean) {
+  async updateOrder(orderId: string, body: updateOrder) {
     await this.prismaService.orders.update({
       where: {
         id: orderId,
       },
       data: {
-        isDelivered: isDelivered,
-        deliveredAt: delivaryTime,
+        isDelivered: body.isDelivered,
+        deliveredAt: body.deliveredAt,
       },
     });
     // delete all orders from redisCache

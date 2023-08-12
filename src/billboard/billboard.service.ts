@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { RedisService } from 'src/redis/redis.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { RedisService } from '../redis/redis.service';
 // create interface for create billboard
 interface CreateBillboard {
   label: string;
@@ -96,10 +96,10 @@ export class BillboardService {
       throw new Error("Can't delete billboard");
     }
   }
-  async getAllBillboard(storeId: string) {
+  async getAllBillboards(storeId: string) {
     // get billboards from redisCache
     const billboardsFromRedis = await this.redisService.getValueFromList(
-      ' billboards ',
+      'billboards',
     );
     if (billboardsFromRedis && billboardsFromRedis.length !== 0)
       return billboardsFromRedis;

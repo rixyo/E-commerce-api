@@ -19,16 +19,42 @@ describe('ReviewService', () => {
       },
     ],
   };
+  const mockReviews = [
+    {
+      id: 'review-1',
+      rating: 5,
+      images: [
+        {
+          url: 'image-url-1',
+        },
+      ],
+      comment: 'New Comment',
+      createdAt: '2021-08-09T08:00:00.000Z',
+      product: {
+        name: 'New Product',
+        price: '100',
+        Images: [
+          {
+            url: 'image-url-1',
+          },
+        ],
+      },
+    },
+  ];
 
   const mockUserId = 'user-1';
   const mockProductId = 'product-1';
   const mockCreatedReview = 'Review created successfully.';
   const mockOrder = { id: 'order-1' };
   const mockPrismaCreateReview = jest.fn();
-  const mockRedisDeleteValue = jest.fn();
+  const mockPrismaGetAllReviews = jest.fn();
   const mockPrismaFindFirstOrder = jest.fn();
   const mockPrismaFindFirstReview = jest.fn();
   const mockPrismaReviewImageCreateMany = jest.fn();
+
+  const mockRedisDeleteValue = jest.fn();
+  const mockRedisSetValueToList = jest.fn();
+  const mockRedisGetValueFromList = jest.fn();
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -40,6 +66,7 @@ describe('ReviewService', () => {
             review: {
               create: mockPrismaCreateReview,
               findFirst: mockPrismaFindFirstReview,
+              findMany: mockPrismaGetAllReviews,
             },
             reviewImage: {
               createMany: mockPrismaReviewImageCreateMany,
@@ -53,6 +80,8 @@ describe('ReviewService', () => {
           provide: RedisService,
           useValue: {
             deleteValue: mockRedisDeleteValue,
+            setValueToList: mockRedisSetValueToList,
+            getValueFromList: mockRedisGetValueFromList,
           },
         },
       ],
@@ -64,6 +93,52 @@ describe('ReviewService', () => {
     jest.resetAllMocks();
   });
 
+  describe('getAllReviews', () => {
+    it('should get all reviews if cahed is empty', async () => {
+      mockPrismaGetAllReviews.mockReturnValue(mockReviews);
+      mockRedisGetValueFromList.mockReturnValue(null);
+      const result = await service.getUserReviews(mockUserId);
+      expect(result).toEqual(mockReviews);
+      expect(mockPrismaGetAllReviews).toHaveBeenCalledWith({
+        where: {
+          userId: mockUserId,
+        },
+        select: {
+          id: true,
+          rating: true,
+          images: {
+            select: {
+              url: true,
+            },
+            take: 1,
+          },
+          comment: true,
+          createdAt: true,
+          product: {
+            select: {
+              name: true,
+              price: true,
+              Images: {
+                select: {
+                  url: true,
+                },
+                take: 1,
+              },
+            },
+          },
+        },
+      });
+      expect(mockRedisSetValueToList).toHaveBeenCalledWith(
+        'user-reviews',
+        JSON.stringify(mockReviews),
+      );
+    });
+    it('should get all reviews if cahed is not empty', async () => {
+      mockRedisGetValueFromList.mockReturnValue(mockReviews);
+      const result = await service.getUserReviews(mockUserId);
+      expect(result).toEqual(mockReviews);
+    });
+  });
   describe('create', () => {
     it('should create a review', async () => {
       mockPrismaCreateReview.mockReturnValue(mockCreatedReview);

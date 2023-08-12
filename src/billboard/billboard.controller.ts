@@ -9,7 +9,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { BillboardService } from './billboard.service';
-import { Roles } from 'src/decoratores/role.decorator';
+import { Roles } from '../decoratores/role.decorator';
 import { createBillboardDto } from './dto/billboard.dto';
 
 @Controller('billboard')
@@ -45,7 +45,7 @@ export class BillboardController {
   async findAllBillboards(
     @Param('storeId', new ParseUUIDPipe()) storeId: string,
   ) {
-    return await this.billboardService.getAllBillboard(storeId);
+    return await this.billboardService.getAllBillboards(storeId);
   }
   @Roles('ADMIN')
   @Delete(':id')

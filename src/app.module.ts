@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common';
-import { PrismaService } from './prisma/prisma.service';
-import { StoreService } from './store/store.service';
 import { StoreModule } from './store/store.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
@@ -21,8 +19,12 @@ import { WebhookModule } from './webhook/webhook.module';
 import { ReviewModule } from './review/review.module';
 import { RevenueModule } from './revenue/revenue.module';
 import { EmailModule } from './email/email.module';
+import { ConfigModule } from '@nestjs/config';
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     StoreModule,
     PrismaModule,
     UserModule,

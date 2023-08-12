@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import * as mailgen from 'mailgen';
-import { RedisService } from 'src/redis/redis.service';
+import { RedisService } from '../redis/redis.service';
 @Injectable()
 export class EmailService {
   private transporter: nodemailer.Transporter;

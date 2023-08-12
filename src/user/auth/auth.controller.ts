@@ -7,9 +7,9 @@ import {
   UpdatePasswordDTO,
   UpdateUserDTO,
 } from './dot/auth.dto';
-import { Roles } from 'src/decoratores/role.decorator';
+import { Roles } from '../../decoratores/role.decorator';
 import { User, userType } from '../decorators/user.decrator';
-import { EmailService } from 'src/email/email.service';
+import { EmailService } from '../../email/email.service';
 @Controller('auth')
 export class AuthController {
   constructor(

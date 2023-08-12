@@ -1,6 +1,6 @@
 import { Controller, Get, Param, ParseUUIDPipe } from '@nestjs/common';
 import { RevenueService } from './revenue.service';
-import { Roles } from 'src/decoratores/role.decorator';
+import { Roles } from '../decoratores/role.decorator';
 
 @Controller('revenue')
 export class RevenueController {

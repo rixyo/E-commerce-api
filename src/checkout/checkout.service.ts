@@ -1,7 +1,7 @@
 // Purpose: Checkout service for checkout module and stripe payment.
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { RedisService } from 'src/redis/redis.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { RedisService } from '../redis/redis.service';
 import Stripe from 'stripe';
 interface CreateCheckout {
   productIds: string[];

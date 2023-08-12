@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { RedisService } from 'src/redis/redis.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class RevenueService {
@@ -94,7 +94,6 @@ export class RevenueService {
     const currentYear = currentDate.getFullYear();
     const currentMonth = currentDate.getMonth() + 1; // Adding 1 to get the correct month
 
-    // Rest of your code to calculate revenue
     const startDate = new Date(currentYear, currentMonth - 1, 1); // Months are 0-indexed
     const endDate = new Date(currentYear, currentMonth, 0);
     endDate.setHours(23, 59, 59, 999);

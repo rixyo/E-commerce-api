@@ -1,10 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { RedisService } from 'src/redis/redis.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { RedisService } from '../redis/redis.service';
 // create interface for create product
 interface CreateProduct {
   name: string;
-  price: number;
+  price: string;
   categoryId: string;
   images: { url: string }[];
   colors: { value: string }[];
@@ -150,7 +150,7 @@ export class ProductService {
       const product = await this.prismaService.product.create({
         data: {
           name: body.name,
-          price: body.price.toFixed(2),
+          price: body.price,
           storeId: storeId,
           categoryId: body.categoryId,
           description: body.description,
@@ -184,14 +184,13 @@ export class ProductService {
         }),
         this.redisService.deleteValue('admin-products'),
       ]);
-
       return 'Product created successfully';
     } catch (error) {
       throw new Error(error);
     }
   }
   // update product by id
-  async updateProductById(id: string, body: CreateProduct) {
+  async updateProduct(id: string, body: CreateProduct) {
     try {
       const product = await this.prismaService.product.update({
         where: {
@@ -199,7 +198,7 @@ export class ProductService {
         },
         data: {
           name: body.name,
-          price: body.price.toFixed(2),
+          price: body.price,
           categoryId: body.categoryId,
           description: body.description,
           isArchived: body.isArchived,
@@ -236,7 +235,7 @@ export class ProductService {
         this.redisService.deleteValue(id),
         this.redisService.deleteValue('admin-products'),
       ]);
-      return ' Product updated successfully ';
+      return 'Product updated successfully';
     } catch (error) {
       throw new Error(error);
     }
@@ -259,12 +258,7 @@ export class ProductService {
     }
   }
   // search product by name or description and return paginated result
-  async searchProduct(
-    storeId: string,
-    query: string,
-    page: number,
-    limit: number,
-  ) {
+  async searchProducts(query: string, page: number, limit: number) {
     const skip = (page - 1) * limit;
     const take = parseInt(`${limit}`);
     const products = await this.prismaService.product.findMany({
@@ -322,7 +316,7 @@ export class ProductService {
     return products;
   }
   // filter product and return paginated result
-  async filterProduct(
+  async filterProducts(
     storeId: string,
     filters: Filters,
     page: number,

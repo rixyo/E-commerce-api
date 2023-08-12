@@ -5,9 +5,9 @@ import {
 } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
 import { UserRole } from '@prisma/client';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
-import { RedisService } from 'src/redis/redis.service';
+import { RedisService } from '../..//redis/redis.service';
 import { UpdateUserDTO } from './dot/auth.dto';
 interface RestPasswordBody {
   email: string;

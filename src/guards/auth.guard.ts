@@ -4,7 +4,7 @@ import { Reflector } from '@nestjs/core';
 import { UserRole } from '@prisma/client';
 import * as jwt from 'jsonwebtoken';
 import { Observable } from 'rxjs';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 interface JWTPayload {
   userId: string;
   role: UserRole;

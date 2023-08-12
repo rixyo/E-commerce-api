@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service'; // import prisma service
-import { RedisService } from 'src/redis/redis.service'; // import redis service
+import { PrismaService } from '../prisma/prisma.service'; // import prisma service
+import { RedisService } from '../redis/redis.service'; // import redis service
 // create interface for create store
 interface CreateStore {
   name: string;

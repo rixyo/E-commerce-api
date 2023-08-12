@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { CreateCategoryDto } from './dto/category.dto';
 import { CategoryService } from './category.service';
-import { Roles } from 'src/decoratores/role.decorator';
+import { Roles } from '../decoratores/role.decorator';
 
 @Controller('category')
 export class CategoryController {
@@ -49,11 +49,11 @@ export class CategoryController {
     @Param('storeId', new ParseUUIDPipe()) storeId: string,
     @Body() data: CreateCategoryDto,
   ) {
-    return await this.categoryService.updateCategoryById(id, data);
+    return await this.categoryService.updateCategory(id, data);
   }
   @Roles('ADMIN')
   @Delete(':id')
   async deleteCategoryById(@Param('id', new ParseUUIDPipe()) id: string) {
-    return await this.categoryService.deleteCategoryById(id);
+    return await this.categoryService.deleteCategory(id);
   }
 }

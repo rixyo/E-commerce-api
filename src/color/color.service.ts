@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { RedisService } from 'src/redis/redis.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { RedisService } from '../redis/redis.service';
 // create interface for create color
 interface CreateColor {
   name: string;
@@ -42,8 +42,8 @@ export class ColorService {
   async getColorById(id: string) {
     // get color from redisCache
     const colorFromRedis = await this.redisService.getValueFromHash(
-      'color',
       id,
+      'color',
     );
     if (colorFromRedis) return colorFromRedis;
     else {
@@ -96,12 +96,6 @@ export class ColorService {
         data: {
           name: data.name,
           value: data.value,
-        },
-        select: {
-          id: true,
-          storeId: true,
-          name: true,
-          value: true,
         },
       });
       Promise.all([

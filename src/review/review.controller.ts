@@ -9,8 +9,8 @@ import {
   Query,
 } from '@nestjs/common';
 import { ReviewService } from './review.service';
-import { Roles } from 'src/decoratores/role.decorator';
-import { User, userType } from 'src/user/decorators/user.decrator';
+import { Roles } from '../decoratores/role.decorator';
+import { User, userType } from '../user/decorators/user.decrator';
 import { CreateReviewDto } from './dto/review.dto';
 
 @Controller('review')
@@ -54,6 +54,6 @@ export class ReviewController {
     @Param('productId', new ParseUUIDPipe()) productId: string,
     @Query('page') page: number,
   ) {
-    return await this.reviewService.getReviews(productId, page);
+    return await this.reviewService.productReview(productId, page);
   }
 }

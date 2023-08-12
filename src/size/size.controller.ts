@@ -9,7 +9,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { SizeService } from './size.service';
-import { Roles } from 'src/decoratores/role.decorator';
+import { Roles } from '../decoratores/role.decorator';
 import { createSizeDto } from './dto/size.dto';
 
 @Controller('size')

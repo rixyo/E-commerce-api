@@ -8,9 +8,13 @@ import {
   Patch,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
-import { Roles } from 'src/decoratores/role.decorator';
-import { User, userType } from 'src/user/decorators/user.decrator';
+import { Roles } from '../decoratores/role.decorator';
+import { User, userType } from '../user/decorators/user.decrator';
 
+interface orderUpadte {
+  isDelivered: boolean;
+  deliveredAt: string;
+}
 @Controller('order')
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
@@ -38,13 +42,9 @@ export class OrderController {
   @Patch(':id/update')
   async updateOrder(
     @Param('id', new ParseUUIDPipe()) orderId: string,
-    @Body() body: { deliveredAt: Date; isDelivered: boolean },
+    @Body() body: orderUpadte,
   ) {
-    return await this.orderService.updateOrder(
-      orderId,
-      body.deliveredAt,
-      body.isDelivered,
-    );
+    return await this.orderService.updateOrder(orderId, body);
   }
   @Delete(':id/delete')
   async deleteOrder(@Param('id', new ParseUUIDPipe()) id: string) {

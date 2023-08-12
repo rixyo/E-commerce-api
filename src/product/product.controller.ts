@@ -10,7 +10,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
-import { Roles } from 'src/decoratores/role.decorator';
+import { Roles } from '../decoratores/role.decorator';
 import { createProductDto } from './dto/product.dto';
 
 @Controller('product')
@@ -22,12 +22,7 @@ export class ProductController {
     @Query('search_query') search_query: string,
     @Query('page') page: number,
   ) {
-    return await this.productService.searchProduct(
-      storeId,
-      search_query,
-      page,
-      10,
-    );
+    return await this.productService.searchProducts(search_query, page, 10);
   }
   @Get(':storeId/filter')
   async filterProducts(
@@ -50,7 +45,7 @@ export class ProductController {
       ...(price && { price }),
       ...(isFeatured && { isFeatured }),
     };
-    return await this.productService.filterProduct(storeId, filters, page, 10);
+    return await this.productService.filterProducts(storeId, filters, page, 10);
   }
   @Get(':storeId/findall')
   async getAllProducts(@Param('storeId', new ParseUUIDPipe()) storeId: string) {
@@ -80,6 +75,6 @@ export class ProductController {
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() data: createProductDto,
   ) {
-    return await this.productService.updateProductById(id, data);
+    return await this.productService.updateProduct(id, data);
   }
 }

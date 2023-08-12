@@ -1,8 +1,8 @@
 import { Body, Controller, Param, ParseUUIDPipe, Post } from '@nestjs/common';
 import { CheckoutService } from './checkout.service';
 import { CreateCheckoutDto } from './dto/checkout.dto';
-import { User, userType } from 'src/user/decorators/user.decrator';
-import { Roles } from 'src/decoratores/role.decorator';
+import { User, userType } from '../user/decorators/user.decrator';
+import { Roles } from '../decoratores/role.decorator';
 
 @Controller('checkout')
 export class CheckoutController {

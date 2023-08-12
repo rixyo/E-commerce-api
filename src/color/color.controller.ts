@@ -9,7 +9,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { ColorService } from './color.service';
-import { Roles } from 'src/decoratores/role.decorator';
+import { Roles } from '../decoratores/role.decorator';
 import { createColorDto } from './dto/color.dto';
 
 @Controller('color')

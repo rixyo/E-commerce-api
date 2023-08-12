@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { RedisService } from 'src/redis/redis.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { RedisService } from '../redis/redis.service';
 
 interface CreateCategory {
   name: string;
@@ -111,7 +111,7 @@ export class CategoryService {
     }
   }
   // update category
-  async updateCategoryById(id: string, data: CreateCategory) {
+  async updateCategory(id: string, data: CreateCategory) {
     try {
       await this.prismaService.category.update({
         where: {
@@ -134,7 +134,7 @@ export class CategoryService {
     }
   }
   // delete category
-  async deleteCategoryById(id: string) {
+  async deleteCategory(id: string) {
     try {
       await this.prismaService.category.delete({
         where: {
