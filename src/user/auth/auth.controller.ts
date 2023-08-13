@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, HttpCode } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import {
   LoginDTO,
@@ -16,6 +16,7 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly emailService: EmailService,
   ) {}
+  @HttpCode(200)
   @Post('login')
   async login(@Body() body: LoginDTO) {
     return this.authService.validateUserFromEmailPassword(
@@ -31,6 +32,7 @@ export class AuthController {
       body.password,
     );
   }
+
   @Post('forgot-password')
   async forgotPassword(@Body() body: RestPasswordDTO) {
     let message: string;

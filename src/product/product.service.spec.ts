@@ -248,9 +248,9 @@ describe('ProductService', () => {
   });
   describe('createProduct', () => {
     it('should create a product', async () => {
-      mockPrismaCreateProduct.mockReturnValue('Product created successfully');
+      mockPrismaCreateProduct.mockReturnValue('product-1');
       const result = await service.createProduct(createProductData, 'store-1');
-      expect(result).toEqual('Product created successfully');
+      expect(result).toEqual('product-1');
       expect(mockPrismaCreateProduct).toHaveBeenCalledWith({
         data: {
           name: createProductData.name,
@@ -261,7 +261,11 @@ describe('ProductService', () => {
           isArchived: createProductData.isArchived,
           isFeatured: createProductData.isFeatured,
         },
+        select: {
+          id: true,
+        },
       });
+
       expect(mockRedisDeleteValue).toHaveBeenCalledWith('admin-products');
     });
   });

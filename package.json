@@ -7,8 +7,6 @@
   "license": "UNLICENSED",
   "scripts": {
     "prisma:test:deploy": "dotenv -e .env.test -- prisma migrate deploy",
-    "db:test:rm": "docker compose rm test-db -s -f -v",
-    "db:test:up": "docker compose up test-db -d",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
@@ -19,6 +17,7 @@
     "test": "jest --no-cache",
     "test:watch": "jest  --watch",
     "test:cov": "jest --coverage",
+    "db:test:restart": "yarn prisma:test:deploy",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "dotenv -e .env.test -- jest --watch --no-cache --config ./test/jest-e2e.json"
   },

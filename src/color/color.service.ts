@@ -71,7 +71,7 @@ export class ColorService {
   }
   async createColor(data: CreateColor, storeId: string) {
     try {
-      await this.prismaService.color.create({
+      const color = await this.prismaService.color.create({
         data: {
           name: data.name,
           storeId: storeId,
@@ -82,7 +82,7 @@ export class ColorService {
         },
       });
       await this.redisService.deleteValue('colors');
-      return 'Create color successfully';
+      return color;
     } catch (error) {
       throw new Error("Can't create color");
     }

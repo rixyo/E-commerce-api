@@ -20,7 +20,7 @@ export class EmailService {
     });
   }
   async sendEmail(email: string) {
-    const key = await this.generateRandomToken(20);
+    const key = await this.generateRandomToken();
     await this.redisService.setResetpassword(email, key);
     const mailgenerator = new mailgen({
       theme: 'default',
@@ -62,12 +62,12 @@ export class EmailService {
         console.log(err);
       });
   }
-  async generateRandomToken(length: number) {
+  async generateRandomToken() {
     const characters =
       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let token = '';
 
-    for (let i = 0; i < length; i++) {
+    for (let i = 0; i < 20; i++) {
       const randomIndex = Math.floor(Math.random() * characters.length);
       token += characters[randomIndex];
     }

@@ -7,7 +7,6 @@ import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { UserInterceptor } from './user/intercepters/user.inteceptor';
 import { AuthGuard } from './guards/auth.guard';
 import { RedisModule } from './redis/redis.module';
-import { BillboardService } from './billboard/billboard.service';
 import { BillboardModule } from './billboard/billboard.module';
 import { CategoryModule } from './category/category.module';
 import { SizeModule } from './size/size.module';
@@ -51,7 +50,6 @@ import { ConfigModule } from '@nestjs/config';
       provide: APP_GUARD,
       useClass: AuthGuard,
     },
-    BillboardService,
   ],
 })
 export class AppModule {}

@@ -20,6 +20,9 @@ export class StoreService {
           name: data.name,
           userId: userId,
         },
+        select: {
+          id: true,
+        },
       });
       Promise.all([
         this.redis.deleteValue('userFirstStore'),

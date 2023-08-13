@@ -36,4 +36,17 @@ export class PrismaService
       console.error('Error connecting to the database:', error.message);
     }
   }
+  async cleanDatabase() {
+    return this.$transaction([
+      this.user.deleteMany(),
+      this.store.deleteMany(),
+      this.category.deleteMany(),
+      this.size.deleteMany(),
+      this.color.deleteMany(),
+      this.product.deleteMany(),
+      this.orders.deleteMany(),
+      this.orderItem.deleteMany(),
+      this.review.deleteMany(),
+    ]);
+  }
 }

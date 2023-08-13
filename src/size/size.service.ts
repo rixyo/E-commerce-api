@@ -61,17 +61,20 @@ export class SizeService {
   }
   async createSize(data: CreateSize, storeId: string) {
     try {
-      await this.prismaService.size.create({
+      const size = await this.prismaService.size.create({
         data: {
           name: data.name,
           storeId: storeId,
           value: data.value,
         },
+        select: {
+          id: true,
+        },
       });
 
       await this.redisService.deleteValue('sizes');
 
-      return 'Create size successfully';
+      return size;
     } catch (error) {
       return 'Size creation failed';
     }

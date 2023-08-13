@@ -14,18 +14,21 @@ export class BillboardService {
   ) {}
   async createBillboard(data: CreateBillboard, storeId: string) {
     try {
-      await this.prismaService.billboard.create({
+      const billboard = await this.prismaService.billboard.create({
         data: {
           label: data.label,
           imageUrl: data.imageUrl,
           storeId: storeId,
+        },
+        select: {
+          id: true,
         },
       });
       Promise.all([
         this.redisService.deleteValue('billboards'),
         this.redisService.deleteValue('usersbillboard'),
       ]);
-      return 'Billboard created successfully';
+      return billboard;
     } catch (error) {
       return 'Something went wrong';
     }

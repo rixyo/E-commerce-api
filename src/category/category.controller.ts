@@ -24,7 +24,7 @@ export class CategoryController {
     return await this.categoryService.getCategories(storeId, gender);
   }
 
-  @Get(':storeId/findall')
+  @Get(':storeId/all')
   async getAllCategories(
     @Param('storeId', new ParseUUIDPipe()) storeId: string,
   ) {

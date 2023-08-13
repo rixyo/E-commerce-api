@@ -47,7 +47,7 @@ export class ProductController {
     };
     return await this.productService.filterProducts(storeId, filters, page, 10);
   }
-  @Get(':storeId/findall')
+  @Get(':storeId/all')
   async getAllProducts(@Param('storeId', new ParseUUIDPipe()) storeId: string) {
     return await this.productService.getAllProducts(storeId);
   }

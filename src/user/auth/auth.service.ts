@@ -41,12 +41,14 @@ export class AuthService {
       );
       if (!doesPasswordMatch)
         throw new ConflictException('Something went wrong');
-      const token = this.generateJwtToken(
+      const token = await this.generateJwtToken(
         user.id,
         user.displayName,
         user.userRole,
       );
-      return token;
+      return {
+        access_token: token,
+      };
     }
   }
   async signupWithEmailPassword(
@@ -74,7 +76,9 @@ export class AuthService {
       user.displayName,
       user.userRole,
     );
-    return token;
+    return {
+      access_token: token,
+    };
   }
   async generateJwtToken(
     userId: string,
@@ -120,6 +124,7 @@ export class AuthService {
       data: {
         displayName: data.displayName,
         email: data.email,
+        userRole: 'ADMIN',
         avatarUrl: data.avaterUrl,
       },
     });

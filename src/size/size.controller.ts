@@ -15,7 +15,7 @@ import { createSizeDto } from './dto/size.dto';
 @Controller('size')
 export class SizeController {
   constructor(private readonly sizeService: SizeService) {}
-  @Get(':storeId/findall')
+  @Get(':storeId')
   async getAllSizes(@Param('storeId', ParseUUIDPipe) storeId: string) {
     return await this.sizeService.getAllSizes(storeId);
   }
@@ -32,10 +32,9 @@ export class SizeController {
     return await this.sizeService.createSize(data, storeId);
   }
   @Roles('ADMIN')
-  @Patch(':storeId/update/:id')
+  @Patch(':id')
   async updateSizeById(
     @Param('id', ParseUUIDPipe) id: string,
-    @Param('storeId', ParseUUIDPipe) storeId: string,
     @Body() data: createSizeDto,
   ) {
     return await this.sizeService.updateSize(id, data);

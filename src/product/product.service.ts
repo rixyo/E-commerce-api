@@ -157,6 +157,9 @@ export class ProductService {
           isArchived: body.isArchived,
           isFeatured: body.isFeatured,
         },
+        select: {
+          id: true,
+        },
       });
       // create images,size and color for product
       const productImage = body.images.map((image) => ({
@@ -184,7 +187,7 @@ export class ProductService {
         }),
         this.redisService.deleteValue('admin-products'),
       ]);
-      return 'Product created successfully';
+      return product;
     } catch (error) {
       throw new Error(error);
     }
