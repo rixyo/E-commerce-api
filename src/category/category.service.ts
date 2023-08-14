@@ -19,9 +19,9 @@ export class CategoryService {
     const categoriesFromRedis = await this.redisService.getValueFromList(
       'admincategories',
     );
-    if (categoriesFromRedis && categoriesFromRedis.length !== 0)
+    if (categoriesFromRedis && categoriesFromRedis.length !== 0) {
       return categoriesFromRedis;
-    else {
+    } else {
       const categories = await this.prismaService.category.findMany({
         where: {
           storeId: storeId,
@@ -45,7 +45,8 @@ export class CategoryService {
           createdAt: 'desc',
         },
       });
-      if (!categories) throw new NotFoundException('Categories not found');
+      if (categories.length === 0)
+        throw new NotFoundException('Categories not found');
       // set categories to redisCache
       await this.redisService.setValueToList(
         'admincategories',
@@ -94,7 +95,7 @@ export class CategoryService {
   // create category
   async createCategory(data: CreateCategory, storeId: string) {
     try {
-      await this.prismaService.category.create({
+      const category = await this.prismaService.category.create({
         data: {
           name: data.name,
           storeId: storeId,
@@ -102,10 +103,13 @@ export class CategoryService {
           gender: data.gender,
           imageUrl: data.imageUrl,
         },
+        select: {
+          id: true,
+        },
       });
       await this.redisService.deleteValue('admincategories');
       await this.redisService.deleteValue('usercategories');
-      return 'Category created';
+      return category;
     } catch (error) {
       throw new Error('Category not created');
     }

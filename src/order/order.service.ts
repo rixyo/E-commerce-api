@@ -105,6 +105,8 @@ export class OrderService {
       this.redisService.deleteValue('pendding-orders'),
       this.redisService.deleteValue('delivered-orders'),
       this.redisService.deleteValue('total_revenue'),
+      this.redisService.deleteValue('currentMonthRevenue'),
+      this.redisService.deleteValue('previousMonthRevenue'),
     ]);
 
     return 'order updated successfully';
@@ -218,6 +220,8 @@ export class OrderService {
       this.redisService.deleteValue('pendding-orders'),
       this.redisService.deleteValue('delivered-orders'),
       this.redisService.deleteValue('total_revenue'),
+      this.redisService.deleteValue('currentMonthRevenue'),
+      this.redisService.deleteValue('previousMonthRevenue'),
     ]);
     return 'order deleted successfully';
   }

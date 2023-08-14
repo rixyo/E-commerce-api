@@ -38,15 +38,15 @@ export class PrismaService
   }
   async cleanDatabase() {
     return this.$transaction([
+      this.orderItem.deleteMany(),
+      this.orders.deleteMany(),
+      this.review.deleteMany(),
+      this.product.deleteMany(),
+      this.color.deleteMany(),
       this.user.deleteMany(),
-      this.store.deleteMany(),
       this.category.deleteMany(),
       this.size.deleteMany(),
-      this.color.deleteMany(),
-      this.product.deleteMany(),
-      this.orders.deleteMany(),
-      this.orderItem.deleteMany(),
-      this.review.deleteMany(),
+      this.store.deleteMany(),
     ]);
   }
 }

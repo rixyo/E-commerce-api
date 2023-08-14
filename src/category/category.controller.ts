@@ -16,7 +16,7 @@ import { Roles } from '../decoratores/role.decorator';
 @Controller('category')
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
-  @Get(':storeId')
+  @Get(':storeId/client')
   async getCategories(
     @Param('storeId', new ParseUUIDPipe()) storeId: string,
     @Query('gender') gender: string,
@@ -43,10 +43,9 @@ export class CategoryController {
     return await this.categoryService.createCategory(data, storeId);
   }
   @Roles('ADMIN')
-  @Patch(':storeId/update/:id')
+  @Patch(':id/update')
   async updateCategoryById(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @Param('storeId', new ParseUUIDPipe()) storeId: string,
     @Body() data: CreateCategoryDto,
   ) {
     return await this.categoryService.updateCategory(id, data);

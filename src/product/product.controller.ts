@@ -69,9 +69,8 @@ export class ProductController {
     return await this.productService.deleteProductById(id);
   }
   @Roles('ADMIN')
-  @Patch(':storeId/update/:id')
+  @Patch(':id/update')
   async updateProduct(
-    @Param('storeId', new ParseUUIDPipe()) storeId: string,
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() data: createProductDto,
   ) {

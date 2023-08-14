@@ -60,6 +60,8 @@ export class WebhookService {
         this.redisService.deleteValue('pendding-orders'),
         this.redisService.deleteValue('delivered-orders'),
         this.redisService.deleteValue('total_revenue'),
+        this.redisService.deleteValue('currentMonthRevenue'),
+        this.redisService.deleteValue('previousMonthRevenue'),
       ]);
     }
     return { received: true };

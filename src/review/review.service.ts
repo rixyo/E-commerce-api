@@ -55,6 +55,9 @@ export class ReviewService {
         userId: userId,
         productId: productId,
       },
+      select: {
+        id: true,
+      },
     });
     const reviewImage = createReview.images.map((image) => ({
       ...image,
@@ -67,7 +70,7 @@ export class ReviewService {
       this.redisService.deleteValue('product-reviews'),
       this.redisService.deleteValue('user-reviews'),
     ]);
-    return 'Review created successfully.';
+    return review;
   }
   // check if user is eligible to review
   async checkIfUserIsEligibleToReview(userId: string, productId: string) {

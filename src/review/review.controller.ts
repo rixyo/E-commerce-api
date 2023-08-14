@@ -16,7 +16,7 @@ import { CreateReviewDto } from './dto/review.dto';
 @Controller('review')
 export class ReviewController {
   constructor(private readonly reviewService: ReviewService) {}
-  @Roles('USER')
+  @Roles('USER', 'ADMIN')
   @Post(':productId/create')
   async createReview(
     @Param('productId', new ParseUUIDPipe()) productId: string,
@@ -25,7 +25,7 @@ export class ReviewController {
   ) {
     return await this.reviewService.createReview(user.userId, productId, body);
   }
-  @Roles('USER')
+  @Roles('USER', 'ADMIN')
   @Get(':productId/check')
   async checkIfUserOrderedProduct(
     @User() user: userType,
@@ -36,12 +36,12 @@ export class ReviewController {
       productId,
     );
   }
-  @Roles('USER')
+  @Roles('USER', 'ADMIN')
   @Get('')
   async getAllReviews(@User() user: userType) {
     return await this.reviewService.getUserReviews(user.userId);
   }
-  @Roles('USER')
+  @Roles('USER', 'ADMIN')
   @Delete(':id')
   async deleteReview(
     @Param('id', new ParseUUIDPipe()) reviewId: string,

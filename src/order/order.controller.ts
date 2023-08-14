@@ -18,7 +18,7 @@ interface orderUpadte {
 @Controller('order')
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
-  @Roles('USER')
+  @Roles('USER', 'ADMIN')
   @Get('pendings')
   async getUserPendingOrders(@User() user: userType) {
     return await this.orderService.getUserPenddingOrders(user.userId);
@@ -29,7 +29,7 @@ export class OrderController {
     return await this.orderService.getUserDeliveredOrders(user.userId);
   }
   @Roles('ADMIN')
-  @Get(':storeId/findall')
+  @Get(':storeId/all')
   async getAllOrders(@Param('storeId', new ParseUUIDPipe()) storeId: string) {
     return await this.orderService.getAllOrders(storeId);
   }

@@ -124,7 +124,6 @@ export class AuthService {
       data: {
         displayName: data.displayName,
         email: data.email,
-        userRole: 'ADMIN',
         avatarUrl: data.avaterUrl,
       },
     });

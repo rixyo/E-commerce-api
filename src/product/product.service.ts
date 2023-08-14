@@ -377,6 +377,7 @@ export class ProductService {
         skip: skip,
         take: take,
       });
+      if (!products) return 'No products found';
       return products;
     } catch (error) {
       console.log(error);

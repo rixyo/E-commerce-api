@@ -15,7 +15,7 @@ import { createColorDto } from './dto/color.dto';
 @Controller('color')
 export class ColorController {
   constructor(private readonly colorService: ColorService) {}
-  @Get(':storeId')
+  @Get(':storeId/all')
   async getAllColors(@Param('storeId', new ParseUUIDPipe()) storeId: string) {
     return await this.colorService.getAllColors(storeId);
   }

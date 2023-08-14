@@ -7,7 +7,7 @@ import { Roles } from '../decoratores/role.decorator';
 @Controller('checkout')
 export class CheckoutController {
   constructor(private readonly checkoutService: CheckoutService) {}
-  @Roles('USER')
+  @Roles('USER', 'ADMIN')
   @Post(':storeId')
   async checkout(
     @Body() data: CreateCheckoutDto,
