@@ -6,6 +6,13 @@ import { Roles } from '../decoratores/role.decorator';
 export class RevenueController {
   constructor(private readonly revenueService: RevenueService) {}
   @Roles('ADMIN')
+  @Get(':storeId/overview')
+  async getRevenueOverview(
+    @Param('storeId', new ParseUUIDPipe()) storeId: string,
+  ) {
+    return await this.revenueService.graphRevenue(storeId);
+  }
+  @Roles('ADMIN')
   @Get(':storeId/current-month')
   async getCurrentMonthRevenue(
     @Param('storeId', new ParseUUIDPipe()) storeId: string,

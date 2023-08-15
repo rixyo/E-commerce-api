@@ -19,6 +19,7 @@ import { ReviewModule } from './review/review.module';
 import { RevenueModule } from './revenue/revenue.module';
 import { EmailModule } from './email/email.module';
 import { ConfigModule } from '@nestjs/config';
+import { SaleModule } from './sale/sale.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -40,6 +41,7 @@ import { ConfigModule } from '@nestjs/config';
     ReviewModule,
     RevenueModule,
     EmailModule,
+    SaleModule,
   ],
   providers: [
     {
