@@ -26,6 +26,7 @@ interface Filters {
 }
 @Injectable()
 export class ProductService {
+  private redisKey = null;
   constructor(
     private readonly prismaService: PrismaService, // inject prisma service or create instance of prisma service
     private readonly redisService: RedisService, // inject redis service or create instance of redis service
@@ -161,6 +162,7 @@ export class ProductService {
           id: true,
         },
       });
+      this.redisKey = null;
       // create images,size and color for product
       const productImage = body.images.map((image) => ({
         ...image,
@@ -217,6 +219,7 @@ export class ProductService {
         ...size,
         productId: product.id,
       }));
+      this.redisKey = null;
       // delete old images,size,color and add new images,size and color to product
       await Promise.all([
         this.prismaService.productColor.deleteMany({
@@ -251,6 +254,7 @@ export class ProductService {
           id: id,
         },
       });
+      this.redisKey = null;
       await Promise.all([
         this.redisService.deleteValue(id),
         this.redisService.deleteValue('admin-products'),
@@ -262,6 +266,7 @@ export class ProductService {
   }
   // search product by name or description and return paginated result
   async searchProducts(query: string, page: number, limit: number) {
+    this.redisKey = `products:${JSON.stringify(query)}:${page}:${limit}`;
     const skip = (page - 1) * limit;
     const take = parseInt(`${limit}`);
     const products = await this.prismaService.product.findMany({
@@ -327,7 +332,14 @@ export class ProductService {
   ) {
     const skip = (page - 1) * perPage;
     const take = parseInt(`${perPage}`);
+    this.redisKey = `products:${storeId}:${JSON.stringify(
+      filters,
+    )}:${page}:${perPage}`;
     try {
+      const cachedProducts = await this.redisService.getValueFromList(
+        this.redisKey,
+      );
+      if (cachedProducts && cachedProducts.length > 0) return cachedProducts;
       const products = await this.prismaService.product.findMany({
         where: {
           storeId: storeId,
@@ -378,6 +390,10 @@ export class ProductService {
         take: take,
       });
       if (!products) return 'No products found';
+      await this.redisService.setValueToList(
+        this.redisKey,
+        JSON.stringify(products),
+      );
       return products;
     } catch (error) {
       console.log(error);

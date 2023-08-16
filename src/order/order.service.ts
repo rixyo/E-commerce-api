@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 interface updateOrder {
@@ -208,11 +212,20 @@ export class OrderService {
     return orders;
   }
   async deleteOrder(orderId: string) {
-    await this.prismaService.orders.delete({
-      where: {
-        id: orderId,
-      },
-    });
+    try {
+      await this.prismaService.orderItem.deleteMany({
+        where: {
+          orderId: orderId,
+        },
+      }),
+        await this.prismaService.orders.delete({
+          where: {
+            id: orderId,
+          },
+        });
+    } catch (error) {
+      throw new BadRequestException('Order not found');
+    }
     // delete all orders from redisCache
     await Promise.all([
       this.redisService.deleteValue('admin-orders'),

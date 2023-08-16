@@ -10,6 +10,7 @@ interface CreateCategory {
 }
 @Injectable()
 export class CategoryService {
+  private redisKey = null;
   constructor(
     private readonly prismaService: PrismaService, // inject prisma service or create instance of prisma service
     private readonly redisService: RedisService, // inject redis service or create instance of redis service
@@ -107,6 +108,7 @@ export class CategoryService {
           id: true,
         },
       });
+      this.redisKey = null;
       await this.redisService.deleteValue('admincategories');
       await this.redisService.deleteValue('usercategories');
       return category;
@@ -127,6 +129,7 @@ export class CategoryService {
           imageUrl: data.imageUrl,
         },
       });
+      this.redisKey = null;
       // delete category from redisCache
       Promise.all([
         this.redisService.deleteValue('admincategories'),
@@ -145,6 +148,7 @@ export class CategoryService {
           id: id,
         },
       });
+      this.redisKey = null;
       // delete category from redisCache
       Promise.all([
         this.redisService.deleteValue('admincategories'),
@@ -159,6 +163,13 @@ export class CategoryService {
   async getCategories(storeId: string, gender: string) {
     try {
       if (gender === undefined) return;
+      this.redisKey = `categorys:${storeId}:${gender}`;
+      // get categories from redisCache
+      const categoriesFromRedis = await this.redisService.getValueFromList(
+        this.redisKey,
+      );
+      if (categoriesFromRedis && categoriesFromRedis.length !== 0)
+        return categoriesFromRedis;
       const categories = await this.prismaService.category.findMany({
         where: {
           storeId,
@@ -181,6 +192,11 @@ export class CategoryService {
         },
       });
       if (!categories) throw new NotFoundException('Categories not found');
+      // set categories to redisCache
+      await this.redisService.setValueToList(
+        this.redisKey,
+        JSON.stringify(categories),
+      );
       return categories;
     } catch (error) {
       console.log(error);

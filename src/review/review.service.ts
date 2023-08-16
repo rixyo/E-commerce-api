@@ -9,6 +9,7 @@ interface CreateReview {
 }
 @Injectable()
 export class ReviewService {
+  private redisKey = null;
   constructor(
     private readonly prismaService: PrismaService,
     private readonly redisService: RedisService,
@@ -165,6 +166,12 @@ export class ReviewService {
   async productReview(productId: string, page: number) {
     const take = 5;
     const skip = (page - 1) * take;
+    this.redisKey = `product-reviews-${productId}-${page}`;
+    const getReviewsFromCache = await this.redisService.getValueFromList(
+      this.redisKey,
+    );
+    if (getReviewsFromCache && getReviewsFromCache.length !== 0)
+      return getReviewsFromCache;
     const reviews = await this.prismaService.review.findMany({
       where: {
         productId: productId,
@@ -192,6 +199,10 @@ export class ReviewService {
     // calculate average rating
     const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
     const averageRating = totalRating / reviews.length;
+    await this.redisService.setValueToList(
+      this.redisKey,
+      JSON.stringify({ reviews, averageRating }),
+    );
     return { reviews, averageRating };
   }
 }

@@ -15,6 +15,7 @@ export class CreateReviewDto {
   @IsString()
   comment: string;
   @IsArray()
+  @IsNotEmpty()
   @ValidateNested({ each: true })
   @Type(() => Image)
   images: Image[];

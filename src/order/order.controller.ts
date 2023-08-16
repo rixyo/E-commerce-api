@@ -46,7 +46,7 @@ export class OrderController {
   ) {
     return await this.orderService.updateOrder(orderId, body);
   }
-  @Delete(':id/delete')
+  @Delete(':id')
   async deleteOrder(@Param('id', new ParseUUIDPipe()) id: string) {
     return await this.orderService.deleteOrder(id);
   }

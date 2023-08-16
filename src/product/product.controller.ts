@@ -16,9 +16,8 @@ import { createProductDto } from './dto/product.dto';
 @Controller('product')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
-  @Get(':storeId/result')
+  @Get('result')
   async searchProduct(
-    @Param('storeId', new ParseUUIDPipe()) storeId: string,
     @Query('search_query') search_query: string,
     @Query('page') page: number,
   ) {

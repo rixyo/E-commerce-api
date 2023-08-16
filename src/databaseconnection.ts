@@ -9,6 +9,7 @@ export class DataBaseConnection {
     try {
       await this.prisma.$connect();
     } catch (error) {
+      window.location.reload();
       console.error('Error connecting to the database:', error);
     }
   }
