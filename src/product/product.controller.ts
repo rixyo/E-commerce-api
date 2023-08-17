@@ -21,7 +21,7 @@ export class ProductController {
     @Query('search_query') search_query: string,
     @Query('page') page: number,
   ) {
-    return await this.productService.searchProducts(search_query, page, 10);
+    return await this.productService.searchProducts(search_query, page, 12);
   }
   @Get(':storeId/filter')
   async filterProducts(
@@ -44,7 +44,7 @@ export class ProductController {
       ...(price && { price }),
       ...(isFeatured && { isFeatured }),
     };
-    return await this.productService.filterProducts(storeId, filters, page, 10);
+    return await this.productService.filterProducts(storeId, filters, page, 12);
   }
   @Get(':storeId/all')
   async getAllProducts(@Param('storeId', new ParseUUIDPipe()) storeId: string) {
@@ -63,16 +63,20 @@ export class ProductController {
     return await this.productService.createProduct(body, storeId);
   }
   @Roles('ADMIN')
-  @Delete(':id')
-  async deleteProduct(@Param('id', new ParseUUIDPipe()) id: string) {
-    return await this.productService.deleteProductById(id);
+  @Delete(':storeId/:id')
+  async deleteProduct(
+    @Param('storeId', new ParseUUIDPipe()) storeId: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ) {
+    return await this.productService.deleteProductById(id, storeId);
   }
   @Roles('ADMIN')
-  @Patch(':id/update')
+  @Patch(':storeId/:id/update')
   async updateProduct(
     @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('storeId', new ParseUUIDPipe()) storeId: string,
     @Body() data: createProductDto,
   ) {
-    return await this.productService.updateProduct(id, data);
+    return await this.productService.updateProduct(id, data, storeId);
   }
 }

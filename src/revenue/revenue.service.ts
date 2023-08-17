@@ -99,39 +99,40 @@ export class RevenueService {
       'currentMonthRevenue',
     );
     if (cachedRevenue) return JSON.parse(cachedRevenue);
-    const revenue = await this.prisma.orders.findMany({
-      where: {
-        storeId,
-        isPaid: true,
-        createdAt: {
-          gte: startDate,
-          lte: endDate,
+    else {
+      const revenue = await this.prisma.orders.findMany({
+        where: {
+          storeId,
+          isPaid: true,
+          createdAt: {
+            gte: startDate,
+            lte: endDate,
+          },
         },
-      },
-      include: {
-        orderItems: {
-          include: {
-            product: {
-              select: {
-                price: true,
+        include: {
+          orderItems: {
+            include: {
+              product: {
+                select: {
+                  price: true,
+                },
               },
             },
           },
         },
-      },
-    });
-    const totalRevenue = revenue.reduce((total, order) => {
-      const orderTotal = order.orderItems.reduce((orderSum, item) => {
-        return orderSum + item.product.price.toNumber();
+      });
+      const totalRevenue = revenue.reduce((total, order) => {
+        const orderTotal = order.orderItems.reduce((orderSum, item) => {
+          return orderSum + item.product.price.toNumber();
+        }, 0);
+        return total + orderTotal;
       }, 0);
-      return total + orderTotal;
-    }, 0);
-    await this.redis.setValueAsString(
-      'currentMonthRevenue',
-      JSON.stringify(totalRevenue),
-    );
-
-    return totalRevenue;
+      await this.redis.setValueAsString(
+        'currentMonthRevenue',
+        JSON.stringify(totalRevenue),
+      );
+      return totalRevenue;
+    }
   }
   // get revenue by storeId and previous month
   async getPreviousMonthRevenue(storeId: string) {
@@ -149,40 +150,41 @@ export class RevenueService {
       'previousMonthRevenue',
     );
     if (cachedRevenue) return JSON.parse(cachedRevenue);
-
-    const revenue = await this.prisma.orders.findMany({
-      where: {
-        storeId,
-        isPaid: true,
-        createdAt: {
-          gte: startDate,
-          lte: endDate,
+    else {
+      const revenue = await this.prisma.orders.findMany({
+        where: {
+          storeId,
+          isPaid: true,
+          createdAt: {
+            gte: startDate,
+            lte: endDate,
+          },
         },
-      },
-      include: {
-        orderItems: {
-          include: {
-            product: {
-              select: {
-                price: true,
+        include: {
+          orderItems: {
+            include: {
+              product: {
+                select: {
+                  price: true,
+                },
               },
             },
           },
         },
-      },
-    });
-    const totalRevenue = revenue.reduce((total, order) => {
-      const orderTotal = order.orderItems.reduce((orderSum, item) => {
-        return orderSum + item.product.price.toNumber();
+      });
+      const totalRevenue = revenue.reduce((total, order) => {
+        const orderTotal = order.orderItems.reduce((orderSum, item) => {
+          return orderSum + item.product.price.toNumber();
+        }, 0);
+        return total + orderTotal;
       }, 0);
-      return total + orderTotal;
-    }, 0);
-    await this.redis.setValueAsString(
-      'previousMonthRevenue',
-      JSON.stringify(totalRevenue),
-    );
+      await this.redis.setValueAsString(
+        'previousMonthRevenue',
+        JSON.stringify(totalRevenue),
+      );
 
-    return totalRevenue;
+      return totalRevenue;
+    }
   }
   async graphRevenue(storeId: string) {
     const paidOrders = await this.prisma.orders.findMany({

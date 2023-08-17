@@ -20,7 +20,10 @@ async function main() {
 
   app.use(bodyParser.urlencoded({ verify: rawBodyBuffer, extended: true }));
   app.use(bodyParser.json({ verify: rawBodyBuffer }));
-  const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
+  const allowedOrigins = [
+    'https://e-commerce-admin-cms.vercel.app',
+    'http://localhost:3000',
+  ];
   app.enableCors({
     origin: allowedOrigins,
     credentials: true,

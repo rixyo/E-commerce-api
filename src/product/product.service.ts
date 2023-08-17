@@ -26,7 +26,6 @@ interface Filters {
 }
 @Injectable()
 export class ProductService {
-  private redisKey = null;
   constructor(
     private readonly prismaService: PrismaService, // inject prisma service or create instance of prisma service
     private readonly redisService: RedisService, // inject redis service or create instance of redis service
@@ -147,6 +146,7 @@ export class ProductService {
   }
   // create product
   async createProduct(body: CreateProduct, storeId: string) {
+    const key = this.redisService.getRedisKey(storeId);
     try {
       const product = await this.prismaService.product.create({
         data: {
@@ -162,7 +162,6 @@ export class ProductService {
           id: true,
         },
       });
-      this.redisKey = null;
       // create images,size and color for product
       const productImage = body.images.map((image) => ({
         ...image,
@@ -188,6 +187,7 @@ export class ProductService {
           data: productSize,
         }),
         this.redisService.deleteValue('admin-products'),
+        this.redisService.deleteValue(key),
       ]);
       return product;
     } catch (error) {
@@ -195,7 +195,8 @@ export class ProductService {
     }
   }
   // update product by id
-  async updateProduct(id: string, body: CreateProduct) {
+  async updateProduct(id: string, body: CreateProduct, storeId: string) {
+    const key = this.redisService.getRedisKey(storeId);
     try {
       const product = await this.prismaService.product.update({
         where: {
@@ -219,7 +220,6 @@ export class ProductService {
         ...size,
         productId: product.id,
       }));
-      this.redisKey = null;
       // delete old images,size,color and add new images,size and color to product
       await Promise.all([
         this.prismaService.productColor.deleteMany({
@@ -240,6 +240,7 @@ export class ProductService {
         }),
         this.redisService.deleteValue(id),
         this.redisService.deleteValue('admin-products'),
+        this.redisService.deleteValue(key),
       ]);
       return 'Product updated successfully';
     } catch (error) {
@@ -247,17 +248,18 @@ export class ProductService {
     }
   }
   // delete product by id
-  async deleteProductById(id: string) {
+  async deleteProductById(id: string, storeId: string) {
+    const key = this.redisService.getRedisKey(storeId);
     try {
       await this.prismaService.product.delete({
         where: {
           id: id,
         },
       });
-      this.redisKey = null;
       await Promise.all([
         this.redisService.deleteValue(id),
         this.redisService.deleteValue('admin-products'),
+        this.redisService.deleteValue(key),
       ]);
       return 'Product deleted successfully';
     } catch (error) {
@@ -266,7 +268,6 @@ export class ProductService {
   }
   // search product by name or description and return paginated result
   async searchProducts(query: string, page: number, limit: number) {
-    this.redisKey = `products:${JSON.stringify(query)}:${page}:${limit}`;
     const skip = (page - 1) * limit;
     const take = parseInt(`${limit}`);
     const products = await this.prismaService.product.findMany({
@@ -332,69 +333,65 @@ export class ProductService {
   ) {
     const skip = (page - 1) * perPage;
     const take = parseInt(`${perPage}`);
-    this.redisKey = `products:${storeId}:${JSON.stringify(
-      filters,
-    )}:${page}:${perPage}`;
+    this.redisService.setRedisKey(storeId, filters, page, perPage);
+    const key = this.redisService.getRedisKey(storeId);
     try {
-      const cachedProducts = await this.redisService.getValueFromList(
-        this.redisKey,
-      );
+      const cachedProducts = await this.redisService.getValueFromList(key);
       if (cachedProducts && cachedProducts.length > 0) return cachedProducts;
-      const products = await this.prismaService.product.findMany({
-        where: {
-          storeId: storeId,
-          ...filters,
-        },
-        select: {
-          id: true,
-          name: true,
-          price: true,
-          description: true,
-          isArchived: true,
-          isFeatured: true,
-          rewiews: {
-            select: {
-              rating: true,
+      else {
+        const products = await this.prismaService.product.findMany({
+          where: {
+            storeId: storeId,
+            ...filters,
+          },
+          select: {
+            id: true,
+            name: true,
+            price: true,
+            description: true,
+            isArchived: true,
+            isFeatured: true,
+            rewiews: {
+              select: {
+                rating: true,
+              },
+            },
+            Images: {
+              select: {
+                id: true,
+                url: true,
+              },
+              take: 1,
+            },
+            Sizes: {
+              select: {
+                id: true,
+                value: true,
+              },
+            },
+            Colors: {
+              select: {
+                id: true,
+                value: true,
+              },
+            },
+            category: {
+              select: {
+                id: true,
+                name: true,
+              },
             },
           },
-          Images: {
-            select: {
-              id: true,
-              url: true,
-            },
-            take: 1,
+          orderBy: {
+            createdAt: 'desc',
           },
-          Sizes: {
-            select: {
-              id: true,
-              value: true,
-            },
-          },
-          Colors: {
-            select: {
-              id: true,
-              value: true,
-            },
-          },
-          category: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-        skip: skip,
-        take: take,
-      });
-      if (!products) return 'No products found';
-      await this.redisService.setValueToList(
-        this.redisKey,
-        JSON.stringify(products),
-      );
-      return products;
+          skip: skip,
+          take: take,
+        });
+        if (!products) return 'No products found';
+        await this.redisService.setValueToList(key, JSON.stringify(products));
+        return products;
+      }
     } catch (error) {
       console.log(error);
     }

@@ -21,7 +21,10 @@ export class CategoryController {
     @Param('storeId', new ParseUUIDPipe()) storeId: string,
     @Query('gender') gender: string,
   ) {
-    return await this.categoryService.getCategories(storeId, gender);
+    const filter = {
+      ...(gender && { gender }),
+    };
+    return await this.categoryService.getCategories(storeId, filter);
   }
 
   @Get(':storeId/all')

@@ -9,7 +9,6 @@ interface CreateReview {
 }
 @Injectable()
 export class ReviewService {
-  private redisKey = null;
   constructor(
     private readonly prismaService: PrismaService,
     private readonly redisService: RedisService,
@@ -113,43 +112,47 @@ export class ReviewService {
     );
     if (getReviewsFromCache && getReviewsFromCache.length !== 0)
       return getReviewsFromCache;
-    const reviews = await this.prismaService.review.findMany({
-      where: {
-        userId: userId,
-      },
-      select: {
-        id: true,
-        rating: true,
-        images: {
-          select: {
-            url: true,
-          },
-          take: 1,
+    else {
+      const reviews = await this.prismaService.review.findMany({
+        where: {
+          userId: userId,
         },
-        comment: true,
-        createdAt: true,
-        product: {
-          select: {
-            name: true,
-            price: true,
-            Images: {
-              select: {
-                url: true,
+        select: {
+          id: true,
+          rating: true,
+          images: {
+            select: {
+              url: true,
+            },
+            take: 1,
+          },
+          comment: true,
+          createdAt: true,
+          product: {
+            select: {
+              id: true,
+              name: true,
+              price: true,
+              Images: {
+                select: {
+                  url: true,
+                },
+                take: 1,
               },
-              take: 1,
             },
           },
         },
-      },
-    });
-    await this.redisService.setValueToList(
-      'user-reviews',
-      JSON.stringify(reviews),
-    );
-    return reviews;
+      });
+      await this.redisService.setValueToList(
+        'user-reviews',
+        JSON.stringify(reviews),
+      );
+      return reviews;
+    }
   }
   // delete review
   async deleteReview(reviewId: string, userId: string) {
+    const key = this.redisService.getRedisKeyForReviews(reviewId);
     await this.prismaService.review.delete({
       where: {
         id: reviewId,
@@ -159,50 +162,55 @@ export class ReviewService {
     Promise.all([
       this.redisService.deleteValue('product-reviews'),
       this.redisService.deleteValue('user-reviews'),
+      this.redisService.deleteValue(key),
     ]);
     return 'Review deleted successfully.';
   }
   // get reviews for product
   async productReview(productId: string, page: number) {
-    const take = 5;
+    const take = 3;
     const skip = (page - 1) * take;
-    this.redisKey = `product-reviews-${productId}-${page}`;
-    const getReviewsFromCache = await this.redisService.getValueFromList(
-      this.redisKey,
-    );
+    this.redisService.setRedisKeyForReviews(productId, page, 3);
+    const key = this.redisService.getRedisKeyForReviews(productId);
+    const getReviewsFromCache = await this.redisService.getValueFromList(key);
     if (getReviewsFromCache && getReviewsFromCache.length !== 0)
       return getReviewsFromCache;
-    const reviews = await this.prismaService.review.findMany({
-      where: {
-        productId: productId,
-      },
-      select: {
-        id: true,
-        rating: true,
-        images: {
-          select: {
-            url: true,
+    else {
+      const reviews = await this.prismaService.review.findMany({
+        where: {
+          productId: productId,
+        },
+        select: {
+          id: true,
+          rating: true,
+          images: {
+            select: {
+              url: true,
+            },
+          },
+          comment: true,
+          createdAt: true,
+          user: {
+            select: {
+              displayName: true,
+              avatarUrl: true,
+            },
           },
         },
-        comment: true,
-        createdAt: true,
-        user: {
-          select: {
-            displayName: true,
-            avatarUrl: true,
-          },
-        },
-      },
-      take: take,
-      skip: skip,
-    });
-    // calculate average rating
-    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
-    const averageRating = totalRating / reviews.length;
-    await this.redisService.setValueToList(
-      this.redisKey,
-      JSON.stringify({ reviews, averageRating }),
-    );
-    return { reviews, averageRating };
+        take: take,
+        skip: skip,
+      });
+      // calculate average rating
+      const totalRating = reviews.reduce(
+        (sum, review) => sum + review.rating,
+        0,
+      );
+      const averageRating = totalRating / reviews.length;
+      await this.redisService.setValueToList(
+        key,
+        JSON.stringify({ reviews, averageRating }),
+      );
+      return { reviews, averageRating };
+    }
   }
 }

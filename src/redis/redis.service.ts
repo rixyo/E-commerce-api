@@ -1,9 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { Redis } from 'ioredis';
 
+interface Filters {
+  price?: {
+    gte?: number;
+    lte?: number;
+  };
+  category?: {
+    name: string;
+  };
+  isFeatured?: boolean;
+}
 @Injectable()
 export class RedisService {
   private readonly redisClient: Redis;
+  private redisKeys: { [storeId: string]: string } = {};
+  private redisKeysForReviews: { [productId: string]: string } = {};
   constructor() {
     try {
       this.redisClient = new Redis({
@@ -49,5 +61,27 @@ export class RedisService {
   async setResetpassword(key: string, value: string) {
     await this.redisClient.set(key, value);
     this.redisClient.expire(key, 300000);
+  }
+  setRedisKey(
+    storeId: string,
+    filters: Filters,
+    page: number,
+    perPage: number,
+  ) {
+    this.redisKeys[storeId] = `products:${storeId}:${JSON.stringify(
+      filters,
+    )}:${page}:${perPage}`;
+  }
+
+  getRedisKey(storeId: string): string {
+    return this.redisKeys[storeId] || '';
+  }
+  setRedisKeyForReviews(productId: string, page: number, perPage: number) {
+    this.redisKeysForReviews[
+      productId
+    ] = `reviews:${productId}:${page}:${perPage}`;
+  }
+  getRedisKeyForReviews(productId: string): string {
+    return this.redisKeysForReviews[productId] || '';
   }
 }
