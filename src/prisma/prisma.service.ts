@@ -30,7 +30,6 @@ export class PrismaService
       }
     } catch (error) {
       this.isConnecting = false;
-      await this.connect();
       console.error('Error connecting to the database:', error.message);
     }
   }
