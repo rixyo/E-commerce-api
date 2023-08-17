@@ -9,6 +9,7 @@ RUN yarn install
 COPY . . 
 
 RUN yarn run build
+RUN npx prisma generate
 
 FROM node:alpine as production
 
@@ -20,6 +21,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 RUN yarn install --only=prod
+RUN npx prisma generate
 
 COPY . .
 
