@@ -7,7 +7,7 @@ COPY package*.json ./
 RUN yarn install
 
 COPY . . 
-
+RUN yarn prisma generate
 RUN yarn run build
 
 FROM node:alpine as production
@@ -19,9 +19,10 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN yarn install --only=prod
+RUN yarn install --only=production
 
 COPY . .
+RUN yarn prisma generate
 
 COPY --from=development /usr/src/app/dist ./dist
 

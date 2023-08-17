@@ -19,11 +19,17 @@ export class RedisService {
   constructor() {
     try {
       this.redisClient = new Redis({
-        host: 'localhost',
-        port: 6379,
+        host: 'cache-db', // Redis service name defined in Docker Compose
+        port: 6379, // Redis port
+      });
+      this.redisClient.on('connect', () => {
+        console.log('Connected to Redis');
+      });
+
+      this.redisClient.on('error', (error) => {
+        console.error('Redis error:', error);
       });
     } catch (error) {
-      this.redisClient = new Redis(process.env.REDIS_URL);
       console.log('redis_connection', error);
     }
   }

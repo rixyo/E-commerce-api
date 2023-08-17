@@ -9,12 +9,13 @@ import { PrismaService } from '../../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { RedisService } from '../..//redis/redis.service';
 import { UpdateUserDTO } from './dot/auth.dto';
+import { UserRole } from '@prisma/client';
 interface RestPasswordBody {
   email: string;
   password: string;
   token: string;
 }
-type UserRole = 'ADMIN' | 'USER';
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -98,8 +99,10 @@ export class AuthService {
   }
   async currentUser(userId: string) {
     const Cacheduser = await this.redis.getValueFromHash(userId, 'user');
-    if (Cacheduser) return Cacheduser;
-    else {
+    if (Cacheduser) {
+      console.log('from cache', Cacheduser);
+      return Cacheduser;
+    } else {
       const user = await this.prisma.user.findUnique({
         where: {
           id: userId,

@@ -16,6 +16,11 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly emailService: EmailService,
   ) {}
+  @Roles('ADMIN', 'USER')
+  @Get('me')
+  async me(@User() user: userType) {
+    return this.authService.currentUser(user.userId);
+  }
   @HttpCode(200)
   @Post('login')
   async login(@Body() body: LoginDTO) {
@@ -44,11 +49,6 @@ export class AuthController {
     message = 'Email sent successfully';
     await this.emailService.sendEmail(body.email);
     return message;
-  }
-  @Roles('ADMIN', 'USER')
-  @Get('me')
-  async me(@User() user: userType) {
-    return this.authService.currentUser(user.userId);
   }
   @Roles('ADMIN', 'USER')
   @Patch('update')
