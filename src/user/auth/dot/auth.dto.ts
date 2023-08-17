@@ -1,7 +1,7 @@
-import { UserRole } from '@prisma/client';
 import { Exclude } from 'class-transformer';
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
+type UserRole = 'ADMIN' | 'USER';
 export class SingupDTO {
   @IsEmail()
   email: string;

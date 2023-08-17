@@ -39,7 +39,7 @@ export class EmailService {
           button: {
             color: '#22BC66', // Optional action button color
             text: 'Reset your password',
-            link: `${process.env.DEV_CLIENT_URL}/resetpassword?validation=${key}`,
+            link: `https://e-commerce-ruby-two.vercel.app/resetpassword?validation=${key}`,
           },
         },
         outro:

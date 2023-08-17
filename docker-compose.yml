@@ -7,16 +7,17 @@ services:
      # - redis_volume_data:/data
     ports:
       - 6379:6379
-  test-db:
-    image: mysql:latest
-    restart: always
+  backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
     ports:
-      - 3306:3306
-    environment:
-      MYSQL_ROOT_PASSWORD: 123456
-      MYSQL_DATABASE: test
-      MYSQL_USER: test
-      MYSQL_PASSWORD: 123456    
+      - 5000:5000
+    restart: always
+    depends_on:
+      - cache-db   
 
 # volumes:
   #redis_volume_data: 

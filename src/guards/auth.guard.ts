@@ -1,10 +1,10 @@
 // Usage: @UseGuards(AuthGuard)
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { UserRole } from '@prisma/client';
 import * as jwt from 'jsonwebtoken';
 import { Observable } from 'rxjs';
 import { PrismaService } from '../prisma/prisma.service';
+type UserRole = 'ADMIN' | 'USER';
 interface JWTPayload {
   userId: string;
   role: UserRole;

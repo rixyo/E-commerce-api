@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
-import { UserRole } from '@prisma/client';
+
 import { PrismaService } from '../../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { RedisService } from '../..//redis/redis.service';
@@ -14,6 +14,7 @@ interface RestPasswordBody {
   password: string;
   token: string;
 }
+type UserRole = 'ADMIN' | 'USER';
 @Injectable()
 export class AuthService {
   constructor(

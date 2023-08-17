@@ -22,7 +22,7 @@ async function main() {
   app.use(bodyParser.json({ verify: rawBodyBuffer }));
   const allowedOrigins = [
     'https://e-commerce-admin-cms.vercel.app',
-    'http://localhost:3000',
+    'https://e-commerce-ruby-two.vercel.app',
   ];
   app.enableCors({
     origin: allowedOrigins,
