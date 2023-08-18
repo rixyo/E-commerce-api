@@ -17,10 +17,7 @@ export class RedisService {
   private redisKeys: { [storeId: string]: string } = {};
   private redisKeysForReviews: { [productId: string]: string } = {};
   constructor() {
-    this.redisClient = new Redis({
-      port: 6379,
-      host: 'cache-db',
-    });
+    this.redisClient = new Redis(process.env.REDIS_URL);
     this.redisClient.on('connect', () => {
       console.log('Connected to Redis');
     });
