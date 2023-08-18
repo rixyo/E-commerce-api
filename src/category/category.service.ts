@@ -110,8 +110,12 @@ export class CategoryService {
           id: true,
         },
       });
-      await this.redisService.deleteValue('admincategories');
-      await this.redisService.deleteValue('usercategories');
+      // delete category from redisCache
+      Promise.all([
+        this.redisService.deleteValue('menCategories'),
+        this.redisService.deleteValue('womenCategories'),
+        this.redisService.deleteValue('admincategories'),
+      ]);
       return category;
     } catch (error) {
       throw new Error('Category not created');
@@ -133,6 +137,8 @@ export class CategoryService {
       // delete category from redisCache
       Promise.all([
         this.redisService.deleteValue('admincategories'),
+        this.redisService.deleteValue('menCategories'),
+        this.redisService.deleteValue('womenCategories'),
         this.redisService.deleteValue(id),
       ]);
       return 'Category updated';
@@ -151,6 +157,8 @@ export class CategoryService {
       // delete category from redisCache
       Promise.all([
         this.redisService.deleteValue('admincategories'),
+        this.redisService.deleteValue('menCategories'),
+        this.redisService.deleteValue('womenCategories'),
         this.redisService.deleteValue(id),
       ]);
       return 'Category deleted';
@@ -159,12 +167,18 @@ export class CategoryService {
     }
   }
   // get categories for user based on gender
-  async getCategories(storeId: string, filter: CategoryFilter) {
+  async getMenCategories(storeId: string) {
+    const categoriesFromRedis = await this.redisService.getValueFromList(
+      'menCategories',
+    );
+    if (categoriesFromRedis && categoriesFromRedis.length !== 0) {
+      return categoriesFromRedis;
+    }
     try {
       const categories = await this.prismaService.category.findMany({
         where: {
           storeId,
-          gender: filter.gender,
+          gender: 'Male',
         },
         select: {
           id: true,
@@ -183,10 +197,54 @@ export class CategoryService {
         },
       });
       if (!categories) throw new NotFoundException('Categories not found');
+      // set categories to redisCache
+      await this.redisService.setValueToList(
+        'menCategories',
+        JSON.stringify(categories),
+      );
       return categories;
     } catch (error) {
       console.log(error);
-      return 'Categories not found';
+    }
+  }
+  async getWomenCategories(storeId: string) {
+    const categoriesFromRedis = await this.redisService.getValueFromList(
+      'womenCategories',
+    );
+    if (categoriesFromRedis && categoriesFromRedis.length !== 0) {
+      return categoriesFromRedis;
+    }
+    try {
+      const categories = await this.prismaService.category.findMany({
+        where: {
+          storeId,
+          gender: 'Female',
+        },
+        select: {
+          id: true,
+          name: true,
+          storeId: true,
+          imageUrl: true,
+          billboard: {
+            select: {
+              label: true,
+            },
+          },
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+      if (!categories) throw new NotFoundException('Categories not found');
+      // set categories to redisCache
+      await this.redisService.setValueToList(
+        'womenCategories',
+        JSON.stringify(categories),
+      );
+      return categories;
+    } catch (error) {
+      console.log(error);
     }
   }
 }

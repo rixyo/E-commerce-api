@@ -43,7 +43,7 @@ export class EmailService {
           },
         },
         outro:
-          "If you didn't request this Email, please ignore it. This password reset is only valid for the next 5 minutes.",
+          "If you didn't request this Email, please ignore it. This password reset link is only valid for the next 2 minutes.",
       },
     };
     const sendEmail = mailgenerator.generate(response);
@@ -67,7 +67,7 @@ export class EmailService {
       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let token = '';
 
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 30; i++) {
       const randomIndex = Math.floor(Math.random() * characters.length);
       token += characters[randomIndex];
     }

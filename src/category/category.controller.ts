@@ -7,7 +7,6 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
-  Query,
 } from '@nestjs/common';
 import { CreateCategoryDto } from './dto/category.dto';
 import { CategoryService } from './category.service';
@@ -16,15 +15,17 @@ import { Roles } from '../decoratores/role.decorator';
 @Controller('category')
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
-  @Get(':storeId/client')
-  async getCategories(
+  @Get(':storeId/men')
+  async getMenCategories(
     @Param('storeId', new ParseUUIDPipe()) storeId: string,
-    @Query('gender') gender: string,
   ) {
-    const filter = {
-      ...(gender && { gender }),
-    };
-    return await this.categoryService.getCategories(storeId, filter);
+    return await this.categoryService.getMenCategories(storeId);
+  }
+  @Get(':storeId/women')
+  async getWomwnCategories(
+    @Param('storeId', new ParseUUIDPipe()) storeId: string,
+  ) {
+    return await this.categoryService.getWomenCategories(storeId);
   }
 
   @Get(':storeId/all')

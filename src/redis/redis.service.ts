@@ -59,7 +59,7 @@ export class RedisService {
   }
   async setResetpassword(key: string, value: string) {
     await this.redisClient.set(key, value);
-    this.redisClient.expire(key, 300000);
+    this.redisClient.expire(key, 60 * 2);
   }
   setRedisKey(
     storeId: string,
