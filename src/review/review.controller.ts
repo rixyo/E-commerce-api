@@ -17,13 +17,19 @@ import { CreateReviewDto } from './dto/review.dto';
 export class ReviewController {
   constructor(private readonly reviewService: ReviewService) {}
   @Roles('USER', 'ADMIN')
-  @Post(':productId/create')
+  @Post(':productId/:storeId/create')
   async createReview(
     @Param('productId', new ParseUUIDPipe()) productId: string,
     @User() user: userType,
+    @Param('storeId', new ParseUUIDPipe()) storeId: string,
     @Body() body: CreateReviewDto,
   ) {
-    return await this.reviewService.createReview(user.userId, productId, body);
+    return await this.reviewService.createReview(
+      user.userId,
+      productId,
+      body,
+      storeId,
+    );
   }
   @Roles('USER', 'ADMIN')
   @Get(':productId/check')
@@ -42,12 +48,17 @@ export class ReviewController {
     return await this.reviewService.getUserReviews(user.userId);
   }
   @Roles('USER', 'ADMIN')
-  @Delete(':id')
+  @Delete(':id/delete/:storeId')
   async deleteReview(
     @Param('id', new ParseUUIDPipe()) reviewId: string,
+    @Param('storeId', new ParseUUIDPipe()) storeId: string,
     @User() user: userType,
   ) {
-    return await this.reviewService.deleteReview(reviewId, user.userId);
+    return await this.reviewService.deleteReview(
+      reviewId,
+      user.userId,
+      storeId,
+    );
   }
   @Get(':productId')
   async getProductReviews(

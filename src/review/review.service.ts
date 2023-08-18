@@ -18,7 +18,10 @@ export class ReviewService {
     userId: string,
     productId: string,
     createReview: CreateReview,
+    storeId: string,
   ) {
+    const key = this.redisService.getRedisKeyForReviews(productId);
+    const storeKey = this.redisService.getRedisKey(storeId);
     const order = await this.prismaService.orders.findFirst({
       where: {
         userId: userId,
@@ -67,7 +70,8 @@ export class ReviewService {
       this.prismaService.reviewImage.createMany({
         data: reviewImage,
       }),
-      this.redisService.deleteValue('product-reviews'),
+      this.redisService.deleteValue(key),
+      this.redisService.deleteValue(storeKey),
       this.redisService.deleteValue('user-reviews'),
     ]);
     return review;
@@ -151,20 +155,26 @@ export class ReviewService {
     }
   }
   // delete review
-  async deleteReview(reviewId: string, userId: string) {
+  async deleteReview(reviewId: string, userId: string, storeId: string) {
     const key = this.redisService.getRedisKeyForReviews(reviewId);
-    await this.prismaService.review.delete({
-      where: {
-        id: reviewId,
-        userId: userId,
-      },
-    });
-    Promise.all([
-      this.redisService.deleteValue('product-reviews'),
-      this.redisService.deleteValue('user-reviews'),
-      this.redisService.deleteValue(key),
-    ]);
-    return 'Review deleted successfully.';
+    const storeKey = this.redisService.getRedisKey(storeId);
+    try {
+      await this.prismaService.review.delete({
+        where: {
+          id: reviewId,
+          userId: userId,
+        },
+      });
+      Promise.all([
+        this.redisService.deleteValue('user-reviews'),
+        this.redisService.deleteValue(key),
+        this.redisService.deleteValue(storeKey),
+      ]);
+      return 'Review deleted successfully.';
+    } catch (error) {
+      console.log(error);
+      throw new ConflictException('Review not found.');
+    }
   }
   // get reviews for product
   async productReview(productId: string, page: number) {
@@ -173,9 +183,9 @@ export class ReviewService {
     this.redisService.setRedisKeyForReviews(productId, page, 3);
     const key = this.redisService.getRedisKeyForReviews(productId);
     const getReviewsFromCache = await this.redisService.getValueFromList(key);
-    if (getReviewsFromCache && getReviewsFromCache.length !== 0)
+    if (getReviewsFromCache && getReviewsFromCache.length !== 0) {
       return getReviewsFromCache;
-    else {
+    } else {
       const reviews = await this.prismaService.review.findMany({
         where: {
           productId: productId,
@@ -200,6 +210,9 @@ export class ReviewService {
         take: take,
         skip: skip,
       });
+      if (!reviews.length) {
+        throw new ConflictException('No reviews found.');
+      }
       // calculate average rating
       const totalRating = reviews.reduce(
         (sum, review) => sum + review.rating,

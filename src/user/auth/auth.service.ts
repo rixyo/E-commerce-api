@@ -100,7 +100,6 @@ export class AuthService {
   async currentUser(userId: string) {
     const Cacheduser = await this.redis.getValueFromHash(userId, 'user');
     if (Cacheduser) {
-      console.log('from cache', Cacheduser);
       return Cacheduser;
     } else {
       const user = await this.prisma.user.findUnique({
