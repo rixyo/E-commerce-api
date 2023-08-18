@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Redis } from 'ioredis';
+import Redis from 'ioredis';
 
 interface Filters {
   price?: {
@@ -17,21 +17,17 @@ export class RedisService {
   private redisKeys: { [storeId: string]: string } = {};
   private redisKeysForReviews: { [productId: string]: string } = {};
   constructor() {
-    try {
-      this.redisClient = new Redis({
-        host: 'cache-db', // Redis service name defined in Docker Compose
-        port: 6379, // Redis port
-      });
-      this.redisClient.on('connect', () => {
-        console.log('Connected to Redis');
-      });
+    this.redisClient = new Redis({
+      port: 6379,
+      host: 'cache-db',
+    });
+    this.redisClient.on('connect', () => {
+      console.log('Connected to Redis');
+    });
 
-      this.redisClient.on('error', (error) => {
-        console.error('Redis error:', error);
-      });
-    } catch (error) {
-      console.log('redis_connection', error);
-    }
+    this.redisClient.on('error', (error) => {
+      console.error('Redis error:', error);
+    });
   }
   async deleteValue(key: string) {
     await this.redisClient.del(key);

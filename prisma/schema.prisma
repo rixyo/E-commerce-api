@@ -1,3 +1,4 @@
+// for experiment I have been using planet scale db, but you can use any mysql db 
 generator client {
   provider = "prisma-client-js"
    previewFeatures = ["fullTextSearch", "fullTextIndex"]

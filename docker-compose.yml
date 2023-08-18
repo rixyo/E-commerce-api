@@ -1,11 +1,11 @@
 version: '3.8'
 services:
   cache-db:
-    image: redis:6.0.7
+    image: redis:7.0.0-alpine
     restart: always
     container_name: cache-db
-    # volumes:
-     # - redis_volume_data:/data
+    volumes:
+      - redis_cached_data:/data
     ports:
       - 6379:6379
   backend:
@@ -18,8 +18,11 @@ services:
       - 5000:5000
     restart: always
     container_name: e-commerce-backend
+    image: e-commerce-backend:v.1.0.0
     depends_on:
       - cache-db   
 
-# volumes:
-  #redis_volume_data: 
+volumes:
+  redis_cached_data: 
+  
+  
