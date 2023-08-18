@@ -337,8 +337,9 @@ export class ProductService {
     const key = this.redisService.getRedisKey(storeId);
     try {
       const cachedProducts = await this.redisService.getValueFromList(key);
-      if (cachedProducts && cachedProducts.length > 0) return cachedProducts;
-      else {
+      if (cachedProducts && cachedProducts.length !== 0) {
+        return cachedProducts;
+      } else {
         const products = await this.prismaService.product.findMany({
           where: {
             storeId: storeId,
