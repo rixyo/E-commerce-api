@@ -9,6 +9,6 @@ export class WebhookController {
     @Req() req: any,
     @Headers('stripe-signature') signature: string,
   ) {
-    return this.webhook.webhook(req.rawBody, signature);
+    return await this.webhook.webhook(req.rawBody, signature);
   }
 }
