@@ -1,15 +1,15 @@
 ## E-Commerce API - Admin CMS and User
-Welcome to the E-Commerce API repository! This project provides a robust and feature-rich API built using TypeScript, Nest.js, Prisma, and other technologies. It serves as the backend for both the admin CMS and user interfaces of an e-commerce platform. With role-based access control and comprehensive testing, this API ensures secure and seamless management of products and user interactions.
+ This project provides a robust and feature-rich API built using TypeScript, Nest.js, Prisma, and other technologies. It serves as the backend for both the admin CMS and user interfaces of an e-commerce platform. With role-based access control and comprehensive testing, this API ensures secure and seamless management of products and user interactions.
 ## Features
-* # Admin CMS and User API: This API caters to both the administrative content management system and user interactions within the e-commerce platform.
-* # Role-Based Access Control: Administrators and users have different access levels, ensuring security and privacy by restricting unauthorized actions.
-* # Guards and Authentication: Built-in guards ensure that only authorized users can access specific routes, enhancing the overall security of the application.
+*  **Admin CMS and User API:** This API caters to both the administrative content management system and user interactions within the e-commerce platform.
+*  **Role-Based Access Control:** Administrators and users have different access levels, ensuring security and privacy by restricting unauthorized actions.
+*  **Guards and Authentication:** Built-in guards ensure that only authorized users can access specific routes, enhancing the overall security of the application.
 
-* # Database Integration: The API interfaces with a MySQL database for structured data storage and retrieval, enhancing scalability and reliability.
+* **Database Integration:** The API interfaces with a MySQL database for structured data storage and retrieval, enhancing scalability and reliability.
 
-* # Caching with Redis: Redis integration boosts performance by providing caching capabilities, reducing database load for frequently accessed data.
+*  **Caching with Redis:** Redis integration boosts performance by providing caching capabilities, reducing database load for frequently accessed data.
 
-* # TTesting with Jest and Docker: Comprehensive testing using Jest covers both unit and end-to-end scenarios. Dockerized testing environment ensures consistent and isolated testing.
+* **Testing with Jest and Docker:** Comprehensive testing using Jest covers both unit and end-to-end scenarios. Dockerized testing environment ensures consistent and isolated testing.
 
 ## Technologies Used
 * TypeScript: Provides type-checking and enhanced developer experience during coding.
