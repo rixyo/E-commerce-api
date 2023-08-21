@@ -333,6 +333,13 @@ export class ProductService {
   ) {
     const skip = (page - 1) * perPage;
     const take = parseInt(`${perPage}`);
+    const total = await this.prismaService.product.count({
+      where: {
+        storeId: storeId,
+        ...filters,
+      },
+    });
+    const totalPages = Math.ceil(total / perPage);
     this.redisService.setRedisKey(storeId, filters, page, perPage);
     const key = this.redisService.getRedisKey(storeId);
     try {
@@ -389,9 +396,18 @@ export class ProductService {
           skip: skip,
           take: take,
         });
-        if (!products) return 'No products found';
-        await this.redisService.setValueToList(key, JSON.stringify(products));
-        return products;
+        if (!products) throw new NotFoundException('No products found');
+        const pagination = {
+          page,
+          per_page: perPage,
+          total,
+          total_pages: totalPages,
+        };
+        await this.redisService.setValueToList(
+          key,
+          JSON.stringify({ products, pagination }),
+        );
+        return { products, pagination };
       }
     } catch (error) {
       console.log(error);
