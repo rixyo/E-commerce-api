@@ -38,8 +38,9 @@ export class RevenueController {
   @Get(':storeId/:date')
   async getRevenueByStoreIdAndDate(
     @Param('storeId', new ParseUUIDPipe()) storeId: string,
-    @Param('date') date: Date,
+    @Param('date') dateString: string,
   ) {
+    const date = new Date(dateString);
     return await this.revenueService.getRevenueByStoreIdAndDate(storeId, date);
   }
 }

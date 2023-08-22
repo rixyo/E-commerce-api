@@ -334,15 +334,15 @@ export class ProductService {
     const skip = (page - 1) * perPage;
     const take = parseInt(`${perPage}`);
     this.redisService.setRedisKey(storeId, filters, page, perPage);
-    const total = await this.prismaService.product.count({
-      where: {
-        storeId: storeId,
-        ...filters,
-      },
-    });
-    const totalPages = Math.ceil(total / perPage);
     const key = this.redisService.getRedisKey(storeId);
     try {
+      const total = await this.prismaService.product.count({
+        where: {
+          storeId: storeId,
+          ...filters,
+        },
+      });
+      const totalPages = Math.ceil(total / perPage);
       const cachedProducts = await this.redisService.getValueFromList(key);
       if (cachedProducts && cachedProducts.length !== 0) {
         return cachedProducts;
