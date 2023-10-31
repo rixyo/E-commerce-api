@@ -8,8 +8,19 @@ pipeline {
     }
 
     stage('log') {
-      steps {
-        sh 'ls -la'
+      parallel {
+        stage('log') {
+          steps {
+            sh 'ls -la'
+          }
+        }
+
+        stage('unit_test') {
+          steps {
+            sh 'yarn . && yarn test'
+          }
+        }
+
       }
     }
 
