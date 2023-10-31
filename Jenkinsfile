@@ -17,7 +17,7 @@ pipeline {
 
         stage('unit_test') {
           steps {
-            sh 'yarn . && yarn test'
+            sh 'yarn  && yarn test'
           }
         }
 
